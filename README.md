@@ -12,6 +12,8 @@ brew install kind
 
 ```bash
 kind create cluster --name local --config configuration.yaml
+
+kubectl config set-context kind-local
 ```
 
 ## Releases
