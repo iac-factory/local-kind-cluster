@@ -1,0 +1,41 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: Gateway
+metadata:
+    name: go-http-api-gateway
+    annotations:
+        networking.istio.io/service-type: "ClusterIP"
+    labels:
+        app: go-http-api
+        service: go-http-api
+        version: v1
+        sidecar.istio.io/inject: "true"
+spec:
+    gatewayClassName: istio
+    listeners:
+        - name: http
+          port: 80
+          protocol: HTTP
+          allowedRoutes:
+              namespaces:
+                  from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: HTTPRoute
+metadata:
+    name: go-http-api
+    labels:
+        app: go-http-api
+        service: go-http-api
+        version: v1
+        sidecar.istio.io/inject: "true"
+spec:
+    parentRefs:
+        - name: go-http-api-gateway
+    rules:
+        - matches:
+              - path:
+                    type: PathPrefix
+                    value: /v1
+          backendRefs:
+              - name: go-http-api
+                port: 8080
