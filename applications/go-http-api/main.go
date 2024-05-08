@@ -14,7 +14,7 @@ type Response struct {
 func handler(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	slog.DebugContext(ctx, "Received Request")
+	slog.DebugContext(ctx, "Received Request", slog.Group("headers", slog.Any("headers", r.Header)))
 
 	// Create an instance of the response structure
 	response := Response{
@@ -30,6 +30,8 @@ func handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+
 	// Handle requests at the root path using the handler function
 	http.HandleFunc("GET /", handler)
 
