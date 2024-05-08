@@ -81,10 +81,10 @@ echo "$GATEWAY_URL"
 
 echo "http://$GATEWAY_URL"
 
-kubectl port-forward -n istio-system services/istio-ingressgateway 5000:80
+kubectl port-forward -n istio-system services/istio-ingressgateway 10000:80
 
 for i in $(seq 1 100); do 
-    curl -s -o /dev/null "http://localhost:5000";
+    curl -s -o /dev/null "http://localhost:10000";
 done
 
 istioctl dashboard kiali 
