@@ -6,7 +6,7 @@ ENV GOOS "linux"
 ENV GOVCS "*:all"
 ENV CGO_ENABLED "0"
 
-ENV GOPRIVATE "gitlab.com/ethrgg/*,github.com/iac-factory/*"
+ENV GOPRIVATE "github.com/iac-factory/*"
 
 WORKDIR /
 

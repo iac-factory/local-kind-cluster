@@ -10,10 +10,8 @@
     kubectl config set-context "$(printf "%s-kind" "kind")"
     ```
 
-## General
+2. Execute `terraform apply`.
 
-**Helm Chart Versions**
-
-```bash
-helm search repo kyverno -l
-```
+    ```bash
+    terraform -chdir=./ci/terraform apply 
+    ```
