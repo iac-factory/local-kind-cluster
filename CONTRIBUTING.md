@@ -40,8 +40,8 @@
 
     ```bash
     # kubectl port-forward -n istio-system services/istio-ingressgateway 10000:80
+    kubectl port-forward -n "development" services/postgres 5432:5432
     kubectl port-forward -n "development" services/api-ingress-gateway-istio 10000:80
-    kubectl port-forward -n development services/postgres 5432:5432
     ```
 
 7. Simulate load.

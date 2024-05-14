@@ -128,6 +128,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type record struct {
+		ID           int    `json:"id"`
 		Username     string `json:"username"`
 		Password     string `json:"-"`
 		Verification string `json:"verification"`
@@ -136,7 +137,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	var user = new(record)
 
 	{
-		rows, e := connection.Query(ctx, "SELECT \"username\", \"password\", \"verification-status\" FROM \"User\" WHERE (\"deletion\" IS NULL) AND (\"username\" = $1);", username)
+		rows, e := connection.Query(ctx, "SELECT \"id\", \"username\", \"password\", \"verification-status\" FROM \"User\" WHERE (\"deletion\" IS NULL) AND (\"username\" = $1);", username)
 		if e != nil {
 			slog.ErrorContext(ctx, "Unable to Query Database Row(s)", slog.String("error", e.Error()))
 			http.Error(w, e.Error(), http.StatusInternalServerError)
@@ -151,7 +152,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			if e := rows.Scan(&user.Username, &user.Password, &user.Verification); e != nil {
+			if e := rows.Scan(&user.ID, &user.Username, &user.Password, &user.Verification); e != nil {
 				slog.ErrorContext(ctx, "Unable to Scan Database Row", slog.String("error", e.Error()))
 				http.Error(w, e.Error(), http.StatusInternalServerError)
 				return
