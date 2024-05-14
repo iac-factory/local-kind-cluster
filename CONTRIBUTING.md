@@ -51,3 +51,9 @@
         curl -s -o /dev/null "http://localhost:10000/v1";
     done
     ```
+
+8. View dashboard.
+
+    ```bash
+    istioctl dashboard kiali 
+    ```
