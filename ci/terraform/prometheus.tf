@@ -1,4 +1,6 @@
 resource "kubernetes_manifest" "serviceaccount_istio_system_prometheus" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "kind" = "ServiceAccount"
@@ -19,6 +21,8 @@ resource "kubernetes_manifest" "serviceaccount_istio_system_prometheus" {
 }
 
 resource "kubernetes_manifest" "configmap_istio_system_prometheus" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "data" = {
@@ -367,6 +371,8 @@ resource "kubernetes_manifest" "configmap_istio_system_prometheus" {
 }
 
 resource "kubernetes_manifest" "clusterrole_prometheus" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "rbac.authorization.k8s.io/v1"
     "kind" = "ClusterRole"
@@ -444,6 +450,8 @@ resource "kubernetes_manifest" "clusterrole_prometheus" {
 }
 
 resource "kubernetes_manifest" "clusterrolebinding_prometheus" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "rbac.authorization.k8s.io/v1"
     "kind" = "ClusterRoleBinding"
@@ -475,6 +483,8 @@ resource "kubernetes_manifest" "clusterrolebinding_prometheus" {
 }
 
 resource "kubernetes_manifest" "service_istio_system_prometheus" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "kind" = "Service"
@@ -512,6 +522,8 @@ resource "kubernetes_manifest" "service_istio_system_prometheus" {
 }
 
 resource "kubernetes_manifest" "deployment_istio_system_prometheus" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "apps/v1"
     "kind" = "Deployment"

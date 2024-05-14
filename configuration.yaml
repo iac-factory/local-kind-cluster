@@ -13,3 +13,7 @@ nodes:
         image: kindest/node:v1.29.2
     -   role: worker
         image: kindest/node:v1.29.2
+networking:
+    ipFamily: ipv4
+    apiServerAddress: "127.0.0.1"
+    apiServerPort: 65300

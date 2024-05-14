@@ -1,4 +1,6 @@
 resource "kubernetes_manifest" "serviceaccount_istio_system_kiali" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "kind" = "ServiceAccount"
@@ -20,6 +22,8 @@ resource "kubernetes_manifest" "serviceaccount_istio_system_kiali" {
 }
 
 resource "kubernetes_manifest" "configmap_istio_system_kiali" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "data" = {
@@ -119,7 +123,7 @@ resource "kubernetes_manifest" "configmap_istio_system_kiali" {
             port: 9090
         port: 20001
         web_root: /kiali
-      
+
       EOT
     }
     "kind" = "ConfigMap"
@@ -141,6 +145,8 @@ resource "kubernetes_manifest" "configmap_istio_system_kiali" {
 }
 
 resource "kubernetes_manifest" "clusterrole_kiali_viewer" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "rbac.authorization.k8s.io/v1"
     "kind" = "ClusterRole"
@@ -300,6 +306,8 @@ resource "kubernetes_manifest" "clusterrole_kiali_viewer" {
 }
 
 resource "kubernetes_manifest" "clusterrole_kiali" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "rbac.authorization.k8s.io/v1"
     "kind" = "ClusterRole"
@@ -466,6 +474,8 @@ resource "kubernetes_manifest" "clusterrole_kiali" {
 }
 
 resource "kubernetes_manifest" "clusterrolebinding_kiali" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "rbac.authorization.k8s.io/v1"
     "kind" = "ClusterRoleBinding"
@@ -498,6 +508,8 @@ resource "kubernetes_manifest" "clusterrolebinding_kiali" {
 }
 
 resource "kubernetes_manifest" "role_istio_system_kiali_controlplane" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "rbac.authorization.k8s.io/v1"
     "kind" = "Role"
@@ -538,6 +550,8 @@ resource "kubernetes_manifest" "role_istio_system_kiali_controlplane" {
 }
 
 resource "kubernetes_manifest" "rolebinding_istio_system_kiali_controlplane" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "rbac.authorization.k8s.io/v1"
     "kind" = "RoleBinding"
@@ -571,6 +585,8 @@ resource "kubernetes_manifest" "rolebinding_istio_system_kiali_controlplane" {
 }
 
 resource "kubernetes_manifest" "service_istio_system_kiali" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "kind" = "Service"
@@ -612,6 +628,8 @@ resource "kubernetes_manifest" "service_istio_system_kiali" {
 }
 
 resource "kubernetes_manifest" "deployment_istio_system_kiali" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "apps/v1"
     "kind" = "Deployment"

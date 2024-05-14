@@ -22,7 +22,7 @@ resource "kubernetes_manifest" "configmap_istio_system_loki" {
     "apiVersion" = "v1"
     "data" = {
       "config.yaml" = <<-EOT
-      
+
       auth_enabled: false
       common:
         compactor_address: 'http://loki:3100'

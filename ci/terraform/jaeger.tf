@@ -1,4 +1,6 @@
 resource "kubernetes_manifest" "deployment_istio_system_jaeger" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "apps/v1"
     "kind" = "Deployment"
@@ -99,6 +101,8 @@ resource "kubernetes_manifest" "deployment_istio_system_jaeger" {
 }
 
 resource "kubernetes_manifest" "service_istio_system_tracing" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "kind" = "Service"
@@ -133,6 +137,8 @@ resource "kubernetes_manifest" "service_istio_system_tracing" {
 }
 
 resource "kubernetes_manifest" "service_istio_system_zipkin" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "kind" = "Service"
@@ -159,6 +165,8 @@ resource "kubernetes_manifest" "service_istio_system_zipkin" {
 }
 
 resource "kubernetes_manifest" "service_istio_system_jaeger_collector" {
+  depends_on = [helm_release.istio-base, helm_release.istiod, helm_release.istio-gateway]
+
   manifest = {
     "apiVersion" = "v1"
     "kind" = "Service"

@@ -1,4 +1,8 @@
 resource "kubernetes_manifest" "podmonitor_istio_system_envoy_stats_monitor" {
+  depends_on = [
+    helm_release.istiod, helm_release.istio-base, helm_release.istio-gateway
+  ]
+
   manifest = {
     "apiVersion" = "monitoring.coreos.com/v1"
     "kind" = "PodMonitor"
@@ -84,9 +88,14 @@ resource "kubernetes_manifest" "podmonitor_istio_system_envoy_stats_monitor" {
       }
     }
   }
+
 }
 
 resource "kubernetes_manifest" "servicemonitor_istio_system_istio_component_monitor" {
+  depends_on = [
+    helm_release.istiod, helm_release.istio-base, helm_release.istio-gateway
+  ]
+
   manifest = {
     "apiVersion" = "monitoring.coreos.com/v1"
     "kind" = "ServiceMonitor"
@@ -125,4 +134,5 @@ resource "kubernetes_manifest" "servicemonitor_istio_system_istio_component_moni
       ]
     }
   }
+
 }

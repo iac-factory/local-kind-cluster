@@ -1,0 +1,71 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: authentication
+    labels:
+        app: api
+        version: v1
+        service: authentication
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: api
+            version: v1
+            service: authentication
+    template:
+        metadata:
+            annotations:
+                sidecar.istio.io/inject: "true"
+            labels:
+                app: api
+                version: v1
+                service: authentication
+        spec:
+            containers:
+                -   name: authentication
+                    livenessProbe:
+                        httpGet:
+                            port: http
+                            path: /health
+                        initialDelaySeconds: 10
+                        periodSeconds: 15
+                    image: localhost:5050/authentication:latest
+                    resources:
+                        requests:
+                            cpu: "100m"
+                    imagePullPolicy: Always
+                    ports:
+                        -   containerPort: 5000
+                            name: http
+                    envFrom:
+                        -   configMapRef:
+                                name: postgres
+                    env:
+                        -   name: CI
+                            value: "true"
+                        # -   name: LOCAL_POD_SERVICE_ACCOUNT
+                        #     valueFrom:
+                        #         fieldRef:
+                        #             fieldPath: spec.serviceAccountName
+                        -   name: LOCAL_POD_IP
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: status.podIP
+                        -   name: LOCAL_NODE_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: spec.nodeName
+                        -   name: LOCAL_POD_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.name
+                        -   name: LOCAL_POD_NAMESPACE
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.namespace
+                        -   name: LOCAL_NAMESPACE
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.namespace
