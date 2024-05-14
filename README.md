@@ -6,6 +6,7 @@ Local Kubernetes Cluster(s) via Kind
 
 ```bash
 brew install kind
+brew install tfk8s
 ```
 
 ## Usage
@@ -48,11 +49,11 @@ helm install istio-egressgateway istio/gateway -n istio-system --create-namespac
 
 helm install istio-ingress istio/gateway -n development --create-namespace
 
-kubectl apply -f ./istio-addons/prometheus.yaml
-kubectl apply -f ./istio-addons/grafana.yaml
-kubectl apply -f ./istio-addons/jaeger.yaml
-kubectl apply -f ./istio-addons/loki.yaml
-kubectl apply -f ./istio-addons/kiali.yaml
+kubectl apply -f ./addons/prometheus.yaml
+kubectl apply -f ./addons/grafana.yaml
+kubectl apply -f ./addons/jaeger.yaml
+kubectl apply -f ./addons/loki.yaml
+kubectl apply -f ./addons/kiali.yaml
 
 kubectl apply -f istio-addons/extras/prometheus-operator.yaml
   
