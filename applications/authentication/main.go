@@ -56,7 +56,7 @@ func disconnect(ctx context.Context, connection *pgx.Conn) error {
 			return e
 		}
 
-		slog.DebugContext(ctx, "Successfully Closed Database Connection", slog.String("Application", name.Name))
+		slog.DebugContext(ctx, "Successfully Closed Database Connection", slog.Group(name.Name, slog.String("Application", name.Name)))
 	}
 
 	return nil
@@ -139,7 +139,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	{
 		rows, e := connection.Query(ctx, "SELECT \"id\", \"username\", \"password\", \"verification-status\" FROM \"User\" WHERE (\"deletion\" IS NULL) AND (\"username\" = $1);", username)
 		if e != nil {
-			slog.ErrorContext(ctx, "Unable to Query Database Row(s)", slog.String("error", e.Error()))
+			slog.ErrorContext(ctx, "Unable to Query Database Row(s)", slog.Group(name.Name, slog.String("error", e.Error())))
 			http.Error(w, e.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -147,13 +147,13 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		var found, validated bool
 		for rows.Next() && !(found) {
 			if e := rows.Err(); e != nil {
-				slog.ErrorContext(ctx, "Unable to Iterate Database Row", slog.String("error", e.Error()))
+				slog.ErrorContext(ctx, "Unable to Iterate Database Row", slog.Group(name.Name, slog.String("error", e.Error())))
 				http.Error(w, e.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			if e := rows.Scan(&user.ID, &user.Username, &user.Password, &user.Verification); e != nil {
-				slog.ErrorContext(ctx, "Unable to Scan Database Row", slog.String("error", e.Error()))
+				slog.ErrorContext(ctx, "Unable to Scan Database Row", slog.Group(name.Name, slog.String("error", e.Error())))
 				http.Error(w, e.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -165,9 +165,9 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 		if !(found) || !(validated) {
 			if !(found) {
-				slog.WarnContext(ctx, "Unable to Find User", slog.String("username", username))
+				slog.WarnContext(ctx, "Unable to Find User", slog.Group(name.Name, slog.String("username", username)))
 			} else if !(validated) {
-				slog.WarnContext(ctx, "Incorrect Password", slog.String("username", username))
+				slog.WarnContext(ctx, "Incorrect Password", slog.Group(name.Name, slog.String("username", username)))
 			}
 
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
@@ -176,7 +176,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user.Verification != "VERIFIED" {
-		slog.WarnContext(ctx, "User Unverified", slog.String("username", username))
+		slog.WarnContext(ctx, "User Unverified", slog.Group(name.Name, slog.String("username", username)))
 		http.Error(w, "user verification field must be \"VERIFIED\"", http.StatusForbidden)
 		return
 	}
