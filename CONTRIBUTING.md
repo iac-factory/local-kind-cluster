@@ -1,4 +1,4 @@
-# Contribution Guide
+# Contributing Guide
 
 ## Usage
 
@@ -57,3 +57,41 @@
     ```bash
     istioctl dashboard kiali 
     ```
+
+## External Secrets Setup
+
+**Disclaimer** - _Local Development Purposes Only_. Do not use the following method outside local development.
+
+### External Secrets Keyverno Permissions
+
+***Note*** - Keyverno permissions are *additive*; `ClusterRole` -- when applied -- mutate permissions, rather than
+overwrite.
+
+```bash
+kubectl apply --filename "./policies/kyverno-external-secrets-permissions.yaml"
+```
+
+### Provider Setup
+
+```bash
+kubectl create namespace "cloud-provider-system"
+kubectl create secret generic --namespace "cloud-provider-system" "aws-secrets-manager-bootstrap" \
+    --from-literal="aws-access-key-id=$(aws configure get aws_access_key_id)" \
+    --from-literal="aws-secret-access-key=$(aws configure get aws_secret_access_key)"
+
+kubectl apply --filename "./policies/aws-cluster-secret-store.yaml"
+```
+
+## Kyverno Debugging
+
+```bash
+kubectl get --raw /api/v1/namespaces | jq
+
+# --> true || false
+kubectl get --raw /api/v1/namespaces | kyverno jp query "items[*].metadata.name | contains(@, 'flux-system')"
+
+# --> yes || no
+kubectl auth can-i create ExternalSecret --as system:serviceaccount:kyverno:kyverno-background-controller
+
+kubectl get clusterrole kyverno:background-controller -o yaml
+```
