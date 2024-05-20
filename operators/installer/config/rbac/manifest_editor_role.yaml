@@ -1,0 +1,27 @@
+# permissions for end users to edit manifests.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: installer
+    app.kubernetes.io/managed-by: kustomize
+  name: manifest-editor-role
+rules:
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - manifests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - manifests/status
+  verbs:
+  - get

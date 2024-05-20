@@ -1,0 +1,12 @@
+.git
+
+bin
+test
+config
+private
+
+.gitignore
+.dockerignore
+.golangci.yml
+
+Dockerfile

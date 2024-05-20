@@ -1,0 +1,27 @@
+# permissions for end users to edit kustomizes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: installer
+    app.kubernetes.io/managed-by: kustomize
+  name: kustomize-editor-role
+rules:
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - kustomizes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - kustomizes/status
+  verbs:
+  - get

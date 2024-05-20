@@ -1,0 +1,75 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.14.0
+  name: kustomizes.installer.operators.ethr.gg
+spec:
+  group: installer.operators.ethr.gg
+  names:
+    kind: Kustomize
+    listKind: KustomizeList
+    plural: kustomizes
+    singular: kustomize
+  scope: Cluster
+  versions:
+  - additionalPrinterColumns:
+    - description: Kustomize Processing Succession
+      jsonPath: .status.processed
+      name: Processed
+      type: boolean
+    - description: The Kustomize Installation URL
+      jsonPath: .spec.url
+      name: URL
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: Kustomize is the Schema for the kustomizes API
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: KustomizeSpec defines the desired state of Kustomize
+            properties:
+              url:
+                description: URL is the Kustomize installation url.
+                example: https://example.com/path/to/kustomize/manifests
+                type: string
+            required:
+            - url
+            type: object
+          status:
+            description: KustomizeStatus defines the observed state of Kustomize
+            properties:
+              error:
+                description: Error is any error(s) that have occurred during the processing
+                  of the KustomizeSpec.
+                type: string
+              processed:
+                default: false
+                description: Processed represents the succession of processing the
+                  KustomizeSpec.
+                type: boolean
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

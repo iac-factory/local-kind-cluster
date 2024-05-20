@@ -1,0 +1,1 @@
+kubebuilder init --plugins "go/v4" --domain "analytics.operators.ethr.gg" --repo "analytics.operators.ethr.gg/analytics" --license "none" --owner "Jacob B. Sanders"

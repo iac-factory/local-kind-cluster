@@ -1,0 +1,90 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - '*'
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - helms
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - helms/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - helms/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - kustomizes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - kustomizes/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - kustomizes/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - manifests
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - manifests/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - manifests/status
+  verbs:
+  - get
+  - patch
+  - update

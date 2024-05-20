@@ -1,0 +1,1 @@
+kubebuilder init --plugins "go/v4" --domain "installer.operators.ethr.gg" --repo "installer.operators.ethr.gg/installer" --license "none" --owner "Jacob B. Sanders"

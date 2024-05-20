@@ -1,0 +1,23 @@
+# permissions for end users to view kustomizes.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: installer
+    app.kubernetes.io/managed-by: kustomize
+  name: kustomize-viewer-role
+rules:
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - kustomizes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - installer.operators.ethr.gg
+  resources:
+  - kustomizes/status
+  verbs:
+  - get

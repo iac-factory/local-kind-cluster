@@ -1,0 +1,9 @@
+apiVersion: installer.operators.ethr.gg/v1alpha1
+kind: Kustomize
+metadata:
+  labels:
+    app.kubernetes.io/name: installer
+    app.kubernetes.io/managed-by: kustomize
+  name: kustomize-sample
+spec:
+  # TODO(user): Add fields here
