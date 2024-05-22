@@ -1,0 +1,17 @@
+---
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+    name: aws-crossplane-management-network
+    namespace: flux-system
+spec:
+    dependsOn:
+        -   name: crossplane
+            namespace: flux-system
+    interval: 1m
+    path: ./infrastructure/aws-crossplane-management/network
+    prune: true
+    sourceRef:
+        kind: GitRepository
+        name: flux-system
+        namespace: flux-system

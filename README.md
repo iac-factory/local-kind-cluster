@@ -1,32 +1,13 @@
-# local-kind-cluster
-
-Local Kubernetes Cluster(s) via Kind
+# `local-kind-cluster`
 
 ## Contribution
 
 Please see the [**Contributing Guide**](./CONTRIBUTING.md) file for additional details.
 
-## Build Attestations
+## External Reference(s)
 
-Build attestations are attached to the final image as metadata.
-
-The purpose of attestations is to make it possible to inspect an image and see where it comes from, who created it and how, and what it contains.
-
-Such a concept enables the use of policy engines for validating images based on policy rules.
-
-Two types of build annotations are available:
-
-- **Software Bill of Material (SBOM)**: list of software artifacts that an image contains, or that were used to build the image.
-- **Provenance**: how an image was built.
-
-### Including Attestations with Docker
-
-```bash
-docker buildx build --sbom=true --provenance=true .
-```
-
-## Multi-Cluster GitOps
-https://github.com/aws-samples/eks-multi-cluster-gitops
-https://aws.amazon.com/blogs/containers/part-1-build-multi-cluster-gitops-using-amazon-eks-flux-cd-and-crossplane/
-
-The local cluster acts as the management cluster.
+- [Official Schema Store](https://github.com/SchemaStore/schemastore/tree/master/src/schemas/json)
+  - [OpenAPI 3.1](https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/schemas/v3.1/schema.json)
+  - [OpenAPI 3.0](https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/schemas/v3.0/schema.json)
+- [AWS EKS, Crossplane, Flux Sample](https://github.com/aws-samples/eks-gitops-crossplane-flux/tree/main)
+    - [Blog Reference](https://aws.amazon.com/blogs/containers/gitops-model-for-provisioning-and-bootstrapping-amazon-eks-clusters-using-crossplane-and-argo-cd/)
