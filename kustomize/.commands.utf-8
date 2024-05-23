@@ -1,1 +1,0 @@
-flux install --components-extra image-reflector-controller,image-automation-controller --export > ./kustomize/flux-install/installation.yaml
