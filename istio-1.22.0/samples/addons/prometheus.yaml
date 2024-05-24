@@ -476,7 +476,6 @@ spec:
   revisionHistoryLimit: 10
   strategy:
     type: Recreate
-    rollingUpdate: null
   template:
     metadata:
       labels:
@@ -487,7 +486,7 @@ spec:
         helm.sh/chart: prometheus-25.19.1
         app.kubernetes.io/managed-by: Helm
         app.kubernetes.io/part-of: prometheus
-        
+
         sidecar.istio.io/inject: "false"
     spec:
       enableServiceLinks: true

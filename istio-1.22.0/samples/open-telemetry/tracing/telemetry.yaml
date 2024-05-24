@@ -3,7 +3,7 @@ kind: Telemetry
 metadata:
   name: otel-demo
 spec:
-  tracing:
-  - providers:
-    - name: otel-tracing
-    randomSamplingPercentage: 0
+    tracing:
+        -   providers:
+                -   name: otel-tracing
+            randomSamplingPercentage: 0

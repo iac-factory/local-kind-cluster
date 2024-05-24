@@ -6,5 +6,5 @@ commonAnnotations:
 resources:
     - namespace.yaml
     - api-gateway.yaml
-    # - peer-authentication.yaml
+    - peer-authentication.yaml
     - telemetry.yaml

@@ -13,6 +13,26 @@ sudo cloud-provider-kind
     kind create cluster --config "configuration.yaml"
     kubectl config set-context "$(printf "%s-kind" "kind")"
     ```
+1. Establish Secret(s).
+    ```bash
+    mkdir -p ./kustomize/secrets/.secrets
+   
+    printf "%s" "${GITHUB_USER}" > ./kustomize/secrets/.secrets/username
+    printf "%s" "${GITHUB_TOKEN}" > ./kustomize/secrets/.secrets/password
+
+    function access-key-id() {
+        printf "%s" "$(aws secretsmanager get-secret-value --secret-id "local/external-secrets/provider/aws/credentials" --query SecretString | jq -r | jq -r ".\"aws-access-key-id\"")"
+    }
+
+    function secret-access-key() {
+        printf "%s" "$(aws secretsmanager get-secret-value --secret-id "local/external-secrets/provider/aws/credentials" --query SecretString | jq -r | jq -r ".\"aws-secret-access-key\"")"
+    }
+
+    printf "%s" "$(access-key-id)" > ./kustomize/secrets/.secrets/aws-access-key-id
+    printf "%s" "$(secret-access-key)" > ./kustomize/secrets/.secrets/aws-secret-access-key
+    
+    kubectl apply --kustomize ./kustomize/secrets --wait
+    ```
 1. Bootstrap.
     ```bash
     flux bootstrap github --repository "https://github.com/iac-factory/cluster-management" \
@@ -33,31 +53,10 @@ sudo cloud-provider-kind
     resources: []
     EOF
     ```
+1. Optionally, update the `Kustomization.flux-system.spec.interval`. 
 1. Update.
     ```bash
     git submodule foreach "git add . && git commit --message \"Git Submodule Update(s)\" && git push -u origin HEAD:main" 
-    ```
-1. Establish Secret(s).
-    ```bash
-    mkdir -p ./kustomize/secrets/.secrets
-   
-    printf "%s" "${GITHUB_USER}" > ./kustomize/secrets/.secrets/username
-    printf "%s" "${GITHUB_TOKEN}" > ./kustomize/secrets/.secrets/password
-
-    function access-key-id() {
-        printf "%s" "$(aws secretsmanager get-secret-value --secret-id "local/external-secrets/provider/aws/credentials" --query SecretString | jq -r | jq -r ".\"aws-access-key-id\"")"
-    }
-
-    function secret-access-key() {
-        printf "%s" "$(aws secretsmanager get-secret-value --secret-id "local/external-secrets/provider/aws/credentials" --query SecretString | jq -r | jq -r ".\"aws-secret-access-key\"")"
-    }
-
-    printf "%s" "$(access-key-id)" > ./kustomize/secrets/.secrets/aws-access-key-id
-    printf "%s" "$(secret-access-key)" > ./kustomize/secrets/.secrets/aws-secret-access-key
-    
-    # printf "[default]\naws_access_key_id=%s\naws_secret_access_key=%s" "$(aws configure get aws_access_key_id)" "$(aws configure get aws_secret_access_key)" > ./kustomize/secrets/.secrets/profile
-   
-    kubectl apply --kustomize ./kustomize/secrets --wait
     ```
 1. Start the local registry.
     ```bash
