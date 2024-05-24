@@ -2,47 +2,57 @@ package main
 
 import (
 	"context"
-	"embed"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
-	"strings"
+	"path/filepath"
+	"runtime"
 
-	"test-service-1/internal/api"
+	"ethr.gg/server"
+	"ethr.gg/server/middleware"
 )
 
-// Server Runtime Context
-var ctx, cancel = context.WithCancel(context.Background())
+// service is a dynamically linked string value - defaults to "service" - which represents the service name.
+var service string = "service"
 
-var (
-	// hostname - Host-System's Hostname
-	hostname string
-
-	// exception - Server Start-Up Error
-	exception error
-
-	// server - the HTTP API Server
-	server *http.Server
-
-	//go:embed global-bundle.pem
-	bundle embed.FS // --> ignored; used to compile binary with pem file
-)
-
-var service string = "service"     // production builds have service dynamically linked
+// version is a dynamically linked string value - defaults to "development" - which represents the service's version.
 var version string = "development" // production builds have version dynamically linked
 
-var (
-	port = flag.String("port", "8080", "Server Listening Port.")
-)
+// ctx, cancel represent the server's runtime context and cancellation handler.
+var ctx, cancel = context.WithCancel(context.Background())
+
+// port represents a cli flag that sets the server listening port
+var port = flag.String("port", "8080", "Server Listening Port.")
 
 func main() {
-	// Issue Cancellation Handler
-	api.Interrupt(ctx, cancel, server)
+	mux := server.Mux()
 
-	shutdown, e := setupOTelSDK(ctx)
+	mux.HandleFunc("GET /{version}/{service}", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+
+		var payload = map[string]interface{}{
+			middleware.New().Service().Value(ctx): map[string]interface{}{
+				"service": middleware.New().Service().Value(ctx),
+				"version": middleware.New().Version().Value(ctx),
+			},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		json.NewEncoder(w).Encode(payload)
+	})
+
+	api := server.Server(ctx, mux, service, version, *port)
+
+	// Issue Cancellation Handler
+	server.Interrupt(ctx, cancel, api)
+
+	shutdown, e := server.Setup(ctx, service, version)
 	if e != nil {
 		panic(e)
 	}
@@ -52,12 +62,12 @@ func main() {
 	}()
 
 	// Start HTTP Server
-	slog.InfoContext(ctx, "Starting Server ...", slog.String("hostname", hostname), slog.String("port", *(port)), slog.String("service", service), slog.String("version", version))
+	slog.InfoContext(ctx, "Starting Server ...", slog.String("port", *(port)), slog.String("service", service), slog.String("version", version))
 
 	fmt.Print("\n")
 
 	// <-- Blocking
-	if e := server.ListenAndServe(); e != nil && !(errors.Is(e, http.ErrServerClosed)) {
+	if e := api.ListenAndServe(); e != nil && !(errors.Is(e, http.ErrServerClosed)) {
 		slog.ErrorContext(ctx, "Error During Server's Listen & Serve Call ...", slog.String("error", e.Error()))
 
 		os.Exit(100)
@@ -65,7 +75,7 @@ func main() {
 
 	// --> Exit
 	{
-		slog.Log(ctx, slog.LevelInfo, "Graceful Shutdown Complete")
+		slog.InfoContext(ctx, "Graceful Shutdown Complete")
 
 		// Waiter
 		<-ctx.Done()
@@ -77,19 +87,10 @@ func init() {
 
 	slog.SetLogLoggerLevel(slog.LevelDebug)
 
-	if buffer := strings.TrimSpace(version); len(buffer) > 0 {
-		if e := os.Setenv("VERSION", string(buffer)); e != nil {
-			slog.WarnContext(ctx, "Unable to Set VERSION Environment Variable", slog.String("error", e.Error()))
+	if service == "service" && os.Getenv("CI") != "true" {
+		_, file, _, ok := runtime.Caller(0)
+		if ok {
+			service = filepath.Base(filepath.Dir(file))
 		}
 	}
-
-	if hostname, exception = os.Hostname(); exception != nil {
-		slog.ErrorContext(ctx, "Unable to Register Hostname", slog.String("error", exception.Error()))
-
-		cancel()
-
-		os.Exit(100)
-	}
-
-	server = api.Server(ctx, api.Router(service, version), *port)
 }

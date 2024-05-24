@@ -80,12 +80,11 @@ istioctl dashboard jaeger
 kubectl apply --kustomize ./applications
 
 kubectl port-forward --namespace development services/api-gateway-istio 8080:80
+
 for i in $(seq 1 100); do 
     curl "http://localhost:8080/v1/test-service-1"
-    curl "http://localhost:8080/v1/test-service-1/alpha"
-    curl "http://localhost:8080/v1/test-service-1/bravo"
     curl "http://localhost:8080/v1/test-service-2"
-    curl "http://localhost:8080/v1/test-service-3"
+    curl "http://localhost:8080/v1/test-service-2/alpha"
 done
 
 ```

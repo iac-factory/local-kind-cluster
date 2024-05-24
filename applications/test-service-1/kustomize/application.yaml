@@ -108,7 +108,7 @@ spec:
         -   matches:
                 -   path:
                         type: PathPrefix
-                        value: /
+                        value: /v1/test-service-1
             backendRefs:
                 -   name: test-service-1
                     kind: Service
