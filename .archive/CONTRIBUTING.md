@@ -55,7 +55,7 @@
 8. View dashboard.
 
     ```bash
-    istioctl dashboard kiali 
+    istioctl dashboard kiali
     ```
 
 ## External Secrets Setup

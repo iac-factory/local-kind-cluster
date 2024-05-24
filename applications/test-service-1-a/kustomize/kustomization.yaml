@@ -1,12 +1,9 @@
 kind: Kustomization
 apiVersion: kustomize.config.k8s.io/v1beta1
-namespace: development
-commonAnnotations:
-    environment: development
 images:
     - name: service:latest
-      newName: localhost:5050/test-service-1
-      newTag: 0.0.35
+      newName: localhost:5050/test-service-1-a
+      newTag: 0.0.12
 resources:
     - namespace.yaml
     - application.yaml

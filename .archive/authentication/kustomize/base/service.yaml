@@ -1,0 +1,120 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: authentication # --> authentication.<namespace>.svc.cluster.local
+    labels:
+        app: authentication
+        service: authentication
+spec:
+    selector:
+        app: authentication
+    ports:
+        -   port: 5000
+            name: http
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+    name: authentication
+    labels:
+        account: authentication
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: authentication
+    labels:
+        app: authentication
+        version: v1
+        service: authentication
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: authentication
+            version: v1
+            service: authentication
+    template:
+        metadata:
+            labels:
+                app: authentication
+                version: v1
+                service: authentication
+        spec:
+            serviceAccountName: authentication
+            containers:
+                -   name: authentication
+                    livenessProbe:
+                        httpGet:
+                            port: http
+                            path: /health
+                        initialDelaySeconds: 10
+                        periodSeconds: 15
+                    image: localhost:5050/authentication:latest
+                    imagePullPolicy: Always
+                    ports:
+                        -   containerPort: 5000
+                    envFrom:
+                        -   configMapRef:
+                                name: postgres
+                    env:
+                        -   name: CI
+                            value: "true"
+                        -   name: LOCAL_POD_SERVICE_ACCOUNT
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: spec.serviceAccountName
+                        -   name: LOCAL_POD_IP
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: status.podIP
+                        -   name: LOCAL_NODE_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: spec.nodeName
+                        -   name: LOCAL_POD_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.name
+                        -   name: LOCAL_POD_NAMESPACE
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.namespace
+                        -   name: LOCAL_NAMESPACE
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.namespace
+
+#---
+#apiVersion: autoscaling/v2
+#kind: HorizontalPodAutoscaler
+#metadata:
+#    name: gateway
+#spec:
+#    # Match the generated Deployment by reference
+#    # Note: Do not use `kind: Gateway`.
+#    scaleTargetRef:
+#        apiVersion: apps/v1
+#        kind: Deployment
+#        name: gateway-istio
+#    minReplicas: 2
+#    maxReplicas: 5
+#    metrics:
+#        - type: Resource
+#          resource:
+#              name: cpu
+#              target:
+#                  type: Utilization
+#                  averageUtilization: 50
+#---
+#apiVersion: policy/v1
+#kind: PodDisruptionBudget
+#metadata:
+#    name: gateway
+#spec:
+#    minAvailable: 1
+#    selector:
+#        # Match the generated Deployment by label
+#        matchLabels:
+#            gateway.networking.k8s.io/gateway-name: gateway

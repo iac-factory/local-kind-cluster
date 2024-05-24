@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-    name: test-service-1 # --> test-service-1.<namespace>.svc.cluster.local
+    name: test-service-1-a # --> test-service-1-a.<namespace>.svc.cluster.local
     labels:
-        app: test-service-1
-        service: test-service-1
+        app: test-service-1-a
+        service: test-service-1-a
 spec:
     selector:
-        app: test-service-1
+        app: test-service-1-a
     ports:
         -   port: 8080
             targetPort: 8080
@@ -17,36 +17,36 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-    name: test-service-1
+    name: test-service-1-a
     labels:
-        account: test-service-1
+        account: test-service-1-a
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: test-service-1
+    name: test-service-1-a
     labels:
-        app: test-service-1
+        app: test-service-1-a
         version: v1
-        service: test-service-1
+        service: test-service-1-a
 spec:
     replicas: 1
     selector:
         matchLabels:
-            app: test-service-1
+            app: test-service-1-a
             version: v1
-            service: test-service-1
+            service: test-service-1-a
     template:
         metadata:
             labels:
-                app: test-service-1
+                app: test-service-1-a
                 version: v1
-                service: test-service-1
+                service: test-service-1-a
                 sidecar.istio.io/inject: "true"
         spec:
-            serviceAccountName: test-service-1
+            serviceAccountName: test-service-1-a
             containers:
-                -   name: test-service-1
+                -   name: test-service-1-a
                     livenessProbe:
                         httpGet:
                             port: 8080
@@ -91,21 +91,18 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: HTTPRoute
 metadata:
-    name: test-service-1
+    name: test-service-1-a
     labels:
         sidecar.istio.io/inject: "true"
 spec:
     parentRefs:
-        -   name: api-gateway
-            kind: Gateway
+        -   name: test-service-1
+            kind: Service
             namespace: development
     rules:
-        -   matches:
-                -   path:
-                        type: PathPrefix
-                        value: /v1/test-service-1
+        -
             backendRefs:
-                -   name: test-service-1
+                -   name: test-service-1-a
                     kind: Service
                     port: 8080
 

@@ -1,4 +1,4 @@
-module test-service-2
+module test-service-3
 
 go 1.22.1
 

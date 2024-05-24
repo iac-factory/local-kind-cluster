@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"test-service-2/internal/api"
+	"test-service-3/internal/api"
 )
 
 // Server Runtime Context

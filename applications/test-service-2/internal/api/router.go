@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -101,6 +102,48 @@ func Router(service, version string) chi.Router {
 				w.WriteHeader(http.StatusOK)
 
 				json.NewEncoder(w).Encode(response)
+
+				return
+			})
+
+			r.Get("/alpha-failure", func(w http.ResponseWriter, r *http.Request) {
+				ctx := r.Context()
+
+				var client http.Client
+				request, e := http.NewRequestWithContext(ctx, http.MethodGet, "http://test-service-1-a.development.svc.cluster.local:8080", nil)
+				if e != nil {
+					http.Error(w, "unable to create request", http.StatusInternalServerError)
+					return
+				}
+
+				response, e := client.Do(request)
+				if e != nil {
+					slog.ErrorContext(ctx, "Error Making Internal Request", slog.String("error", e.Error()))
+					http.Error(w, "error while making internal request", http.StatusInternalServerError)
+					return
+				}
+
+				var structure map[string]interface{}
+				content, e := io.ReadAll(response.Body)
+				if e != nil {
+					http.Error(w, "unable to read response body", http.StatusInternalServerError)
+					return
+				}
+
+				slog.DebugContext(ctx, "Response", slog.String("raw", string(content)))
+
+				if e := json.Unmarshal(content, &structure); e != nil {
+					http.Error(w, "exception while unmarshalling response buffer", http.StatusInternalServerError)
+					return
+				}
+
+				w.Header().Set("Content-Type", response.Header.Get("Content-Type"))
+				w.Header().Set("X-Request-ID", response.Header.Get("X-Request-ID"))
+				w.Header().Set("X-API-Service", response.Header.Get("X-API-Service"))
+				w.Header().Set("X-API-Version", response.Header.Get("X-API-Version"))
+				w.WriteHeader(response.StatusCode)
+
+				json.NewEncoder(w).Encode(structure)
 
 				return
 			})

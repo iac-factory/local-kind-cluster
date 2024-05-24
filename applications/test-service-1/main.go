@@ -42,6 +42,15 @@ func main() {
 	// Issue Cancellation Handler
 	api.Interrupt(ctx, cancel, server)
 
+	shutdown, e := setupOTelSDK(ctx)
+	if e != nil {
+		panic(e)
+	}
+
+	defer func() {
+		e = errors.Join(e, shutdown(context.Background()))
+	}()
+
 	// Start HTTP Server
 	slog.InfoContext(ctx, "Starting Server ...", slog.String("hostname", hostname), slog.String("port", *(port)), slog.String("service", service), slog.String("version", version))
 

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -61,50 +60,30 @@ func Router(service, version string) chi.Router {
 
 	r.Handle("/health", health)
 
-	r.Route("/{version}", func(r chi.Router) {
-		r.Use(func(handler http.Handler) http.Handler {
-			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				version := chi.URLParam(r, "version")
-				ctx := context.WithValue(r.Context(), "version", version)
-				handler.ServeHTTP(w, r.WithContext(ctx))
-			})
-		})
+	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
 
-		r.Route("/{service}", func(r chi.Router) {
-			r.Use(func(handler http.Handler) http.Handler {
-				return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-					service := chi.URLParam(r, "service")
-					ctx := context.WithValue(r.Context(), "service", service)
-					handler.ServeHTTP(w, r.WithContext(ctx))
-				})
-			})
+		id := r.Header.Get("X-Request-ID")
 
-			r.Handle("/health", health)
+		slog.DebugContext(ctx, "Total Headers", slog.Int("total", len(r.Header)))
+		for header, values := range r.Header {
+			slog.DebugContext(ctx, "Headers", slog.String("header", header), slog.String("value", values[0]))
+		}
 
-			r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-				ctx := r.Context()
+		slog.DebugContext(ctx, "Host", slog.String("value", r.Host))
+		slog.DebugContext(ctx, "Referrer", slog.String("value", r.Referer()))
 
-				id := middleware.GetReqID(ctx)
-				version := ctx.Value("version").(string)
-				service := ctx.Value("service").(string)
+		response := map[string]string{
+			"route": "root",
+		}
 
-				response := map[string]string{
-					"route":   "root",
-					"version": version,
-					"service": service,
-				}
+		w.Header().Set("Content-Type", "Application/JSON")
+		w.Header().Set("X-Request-ID", id)
+		w.WriteHeader(http.StatusOK)
 
-				w.Header().Set("Content-Type", "Application/JSON")
-				w.Header().Set("X-Request-ID", id)
-				w.Header().Set("X-API-Service", service)
-				w.Header().Set("X-API-Version", version)
-				w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
 
-				json.NewEncoder(w).Encode(response)
-
-				return
-			})
-		})
+		return
 	})
 
 	return r

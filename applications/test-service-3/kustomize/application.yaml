@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-    name: test-service-2 # --> test-service-2.<namespace>.svc.cluster.local
+    name: test-service-3 # --> test-service-3.<namespace>.svc.cluster.local
     labels:
-        app: test-service-2
-        service: test-service-2
+        app: test-service-3
+        service: test-service-3
 spec:
     selector:
-        app: test-service-2
+        app: test-service-3
     ports:
         -   port: 8080
             targetPort: 8080
@@ -17,36 +17,36 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-    name: test-service-2
+    name: test-service-3
     labels:
-        account: test-service-2
+        account: test-service-3
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: test-service-2
+    name: test-service-3
     labels:
-        app: test-service-2
+        app: test-service-3
         version: v1
-        service: test-service-2
+        service: test-service-3
 spec:
     replicas: 1
     selector:
         matchLabels:
-            app: test-service-2
+            app: test-service-3
             version: v1
-            service: test-service-2
+            service: test-service-3
     template:
         metadata:
             labels:
-                app: test-service-2
+                app: test-service-3
                 version: v1
-                service: test-service-2
+                service: test-service-3
                 sidecar.istio.io/inject: "true"
         spec:
-            serviceAccountName: test-service-2
+            serviceAccountName: test-service-3
             containers:
-                -   name: test-service-2
+                -   name: test-service-3
                     livenessProbe:
                         httpGet:
                             port: 8080
@@ -89,46 +89,23 @@ spec:
                                     fieldPath: metadata.namespace
 ---
 apiVersion: gateway.networking.k8s.io/v1beta1
-kind: Gateway
-metadata:
-    name: test-service-2
-    # annotations:
-        # networking.istio.io/service-type: "ClusterIP"
-    labels:
-        app: test-service-2
-        version: v1
-        app.kubernetes.io/name: test-service-2
-        app.kubernetes.io/version: v1
-        sidecar.istio.io/inject: "true"
-spec:
-    gatewayClassName: istio
-    listeners:
-        - name: http
-          port: 80
-          protocol: HTTP
-          # hostname: "*"
-          allowedRoutes:
-              namespaces:
-                  from: Same
-
----
-apiVersion: gateway.networking.k8s.io/v1beta1
 kind: HTTPRoute
 metadata:
-    name: test-service-2
+    name: test-service-3
     labels:
         sidecar.istio.io/inject: "true"
 spec:
     parentRefs:
-        -   name: test-service-2
+        -   name: api-gateway
             kind: Gateway
+            namespace: development
     rules:
         -   matches:
                 -   path:
                         type: PathPrefix
-                        value: /v1/test-service-2
+                        value: /v1/test-service-3
             backendRefs:
-                -   name: test-service-2
+                -   name: test-service-3
                     kind: Service
                     port: 8080
 

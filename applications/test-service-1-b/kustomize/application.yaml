@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-    name: test-service-1-a # --> test-service-1-a.<namespace>.svc.cluster.local
+    name: test-service-1-b # --> test-service-1-b.<namespace>.svc.cluster.local
     labels:
-        app: test-service-1-a
-        service: test-service-1-a
+        app: test-service-1-b
+        service: test-service-1-b
 spec:
     selector:
-        app: test-service-1-a
+        app: test-service-1-b
     ports:
         -   port: 8080
             targetPort: 8080
@@ -17,36 +17,36 @@ spec:
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-    name: test-service-1-a
+    name: test-service-1-b
     labels:
-        account: test-service-1-a
+        account: test-service-1-b
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: test-service-1-a
+    name: test-service-1-b
     labels:
-        app: test-service-1-a
+        app: test-service-1-b
         version: v1
-        service: test-service-1-a
+        service: test-service-1-b
 spec:
     replicas: 1
     selector:
         matchLabels:
-            app: test-service-1-a
+            app: test-service-1-b
             version: v1
-            service: test-service-1-a
+            service: test-service-1-b
     template:
         metadata:
             labels:
-                app: test-service-1-a
+                app: test-service-1-b
                 version: v1
-                service: test-service-1-a
+                service: test-service-1-b
                 sidecar.istio.io/inject: "true"
         spec:
-            serviceAccountName: test-service-1-a
+            serviceAccountName: test-service-1-b
             containers:
-                -   name: test-service-1-a
+                -   name: test-service-1-b
                     livenessProbe:
                         httpGet:
                             port: 8080
@@ -91,21 +91,17 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: HTTPRoute
 metadata:
-    name: test-service-1-a
+    name: test-service-1-b
     labels:
         sidecar.istio.io/inject: "true"
 spec:
     parentRefs:
-        -   name: api-gateway
-            kind: Gateway
+        -   name: test-service-1
+            kind: Service
             namespace: development
     rules:
-        -   matches:
-                -   path:
-                        type: PathPrefix
-                        value: /v1/test-service-1-a
-            backendRefs:
-                -   name: test-service-1-a
+        -   backendRefs:
+                -   name: test-service-1-b
                     kind: Service
                     port: 8080
 
