@@ -1,9 +1,9 @@
 package name
 
-import "ethr.gg/server/internal/middleware"
+import "ethr.gg/server/internal/keystore"
 
 type Settings struct {
 	Service string
 }
 
-type Variadic middleware.Variadic[Settings]
+type Variadic keystore.Variadic[Settings]

@@ -6,15 +6,18 @@ import (
 	"log/slog"
 	"net/http"
 
+	"ethr.gg/str"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
-	"ethr.gg/server/internal/middleware"
+	"ethr.gg/server/internal/keystore"
+	"ethr.gg/server/logging"
+	"ethr.gg/server/middleware/path"
 )
 
 var implementation = generic{}
 
 type generic struct {
-	middleware.Valuer[string]
+	keystore.Valuer[string]
 }
 
 func (generic) Value(ctx context.Context) string {
@@ -22,19 +25,21 @@ func (generic) Value(ctx context.Context) string {
 }
 
 func (generic) Middleware(next http.Handler) http.Handler {
-	const name = "Telemetry"
-
-	var path = middleware.Keys().Path()
+	var name = str.Title(key.String(), func(o str.Options) {
+		o.Log = true
+	})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
-		pattern := ctx.Value(middleware.Keys().Path()).(string)
+		route := path.New().Value(ctx)
+
+		pattern := ctx.Value(keystore.Keys().Path()).(string)
 
 		{
 			value := "enabled"
 
-			slog.DebugContext(ctx, fmt.Sprintf("Evaluating %s Middleware", name), slog.Group("context", slog.String(path.String(), pattern), slog.String(key.String(), value)))
+			slog.Log(ctx, logging.Trace, fmt.Sprintf("Evaluating %s Middleware", name), slog.Group("context", slog.String(route, pattern), slog.String(key.String(), value)))
 
 			ctx = context.WithValue(ctx, key, value)
 		}

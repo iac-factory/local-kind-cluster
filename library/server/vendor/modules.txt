@@ -1,3 +1,6 @@
+# ethr.gg/str v0.0.0-00010101000000-000000000000 => ../str
+## explicit; go 1.22.1
+ethr.gg/str
 # github.com/cenkalti/backoff/v4 v4.3.0
 ## explicit; go 1.18
 github.com/cenkalti/backoff/v4
@@ -133,6 +136,12 @@ golang.org/x/sys/windows/registry
 golang.org/x/term
 # golang.org/x/text v0.15.0
 ## explicit; go 1.18
+golang.org/x/text/cases
+golang.org/x/text/internal
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/language
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
@@ -237,3 +246,4 @@ google.golang.org/protobuf/types/known/timestamppb
 google.golang.org/protobuf/types/known/wrapperspb
 # ethr.gg/headers => ../headers
 # ethr.gg/atomics => ../atomics
+# ethr.gg/str => ../str

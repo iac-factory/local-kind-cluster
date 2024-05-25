@@ -1,9 +1,9 @@
 package versioning
 
-import "ethr.gg/server/internal/middleware"
+import "ethr.gg/server/internal/keystore"
 
 type Settings struct {
-	Version string
+	Version
 }
 
-type Variadic middleware.Variadic[Settings]
+type Variadic keystore.Variadic[Settings]

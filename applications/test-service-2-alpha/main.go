@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -14,6 +15,7 @@ import (
 
 	"ethr.gg/headers"
 	"ethr.gg/server"
+	"ethr.gg/server/logging"
 	"ethr.gg/server/middleware"
 )
 
@@ -91,21 +93,15 @@ func main() {
 
 		var response = make(map[string]interface{})
 
-		for k, v := range a {
-			slog.DebugContext(ctx, "Response-A", slog.Any("key", k))
-			response[k] = v
-		}
-
-		for k, v := range b {
-			slog.DebugContext(ctx, "Response-B", slog.Any("key", k))
-			response[k] = v
-		}
+		maps.Copy(response, a)
+		maps.Copy(response, b)
 
 		var payload = map[string]interface{}{
 			middleware.New().Service().Value(ctx): map[string]interface{}{
-				"service":  middleware.New().Service().Value(ctx),
-				"version":  middleware.New().Version().Value(ctx),
-				"response": response,
+				"service":     middleware.New().Service().Value(ctx),
+				"version":     middleware.New().Version().Value(ctx).Service,
+				"api-version": middleware.New().Version().Value(ctx).API,
+				"response":    response,
 			},
 		}
 
@@ -153,7 +149,12 @@ func main() {
 func init() {
 	flag.Parse()
 
-	slog.SetLogLoggerLevel(slog.LevelDebug)
+	level := slog.Level(-8)
+	if os.Getenv("CI") == "true" {
+		level = slog.LevelDebug
+	}
+
+	slog.SetLogLoggerLevel(level.Level())
 
 	if service == "service" && os.Getenv("CI") != "true" {
 		_, file, _, ok := runtime.Caller(0)
@@ -161,4 +162,9 @@ func init() {
 			service = filepath.Base(filepath.Dir(file))
 		}
 	}
+
+	options := logging.Options{Service: service, Settings: &slog.HandlerOptions{Level: level}}
+	handler := logging.Logger(os.Stdout, options)
+
+	slog.SetDefault(slog.New(handler))
 }

@@ -1,5 +1,5 @@
 package path
 
-import "ethr.gg/server/internal/middleware"
+import "ethr.gg/server/internal/keystore"
 
-var key = middleware.Keys().Path()
+var key = keystore.Keys().Path()

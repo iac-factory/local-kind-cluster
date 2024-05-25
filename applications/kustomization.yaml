@@ -8,3 +8,5 @@ resources:
     - api-gateway.yaml
     - peer-authentication.yaml
     - telemetry.yaml
+    - server-passthrough-filter.yaml
+    - server-filter.yaml

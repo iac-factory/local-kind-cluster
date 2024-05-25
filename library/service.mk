@@ -62,7 +62,7 @@ bump:
 
 prepare: bump
 	@$(information) Executing Module Vendoring
-	@go mod vendor
+	@go mod tidy && go mod vendor
 	@$(ok) Build Preparation
 	@printf "\n"
 

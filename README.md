@@ -13,3 +13,4 @@ Please see the [**Contributing Guide**](./CONTRIBUTING.md) file for additional d
     - [Blog Reference](https://aws.amazon.com/blogs/containers/gitops-model-for-provisioning-and-bootstrapping-amazon-eks-clusters-using-crossplane-and-argo-cd/)
 - [Istio By Example](https://istiobyexample.dev/grpc/)
 - https://istio.io/latest/about/faq/distributed-tracing/
+- [Slog Guide](https://betterstack.com/community/guides/logging/logging-in-go/)

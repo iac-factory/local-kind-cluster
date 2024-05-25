@@ -6,6 +6,8 @@ replace ethr.gg/headers => ../headers
 
 replace ethr.gg/atomics => ../atomics
 
+replace ethr.gg/str => ../str
+
 require go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.52.0
 
 require (
@@ -18,6 +20,7 @@ require (
 )
 
 require (
+	ethr.gg/str v0.0.0-00010101000000-000000000000
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp v0.3.0
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp v1.27.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.27.0
@@ -27,6 +30,7 @@ require (
 	go.opentelemetry.io/otel/sdk/log v0.3.0
 	go.opentelemetry.io/otel/sdk/metric v1.27.0
 	golang.org/x/crypto v0.23.0
+	golang.org/x/term v0.20.0
 )
 
 require (
@@ -37,7 +41,6 @@ require (
 	go.opentelemetry.io/proto/otlp v1.2.0 // indirect
 	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
-	golang.org/x/term v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240520151616-dc85e6b867a5 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240515191416-fc5f0ca64291 // indirect

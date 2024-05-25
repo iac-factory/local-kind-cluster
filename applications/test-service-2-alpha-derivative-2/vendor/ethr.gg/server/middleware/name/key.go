@@ -1,5 +1,5 @@
 package name
 
-import "ethr.gg/server/internal/middleware"
+import "ethr.gg/server/internal/keystore"
 
-var key = middleware.Keys().Service()
+var key = keystore.Keys().Service()

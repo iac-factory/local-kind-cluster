@@ -6,15 +6,18 @@ import (
 	"log/slog"
 	"net/http"
 
-	"ethr.gg/server/internal/middleware"
+	"ethr.gg/str"
+
+	"ethr.gg/server/internal/keystore"
+	"ethr.gg/server/logging"
 )
 
 var implementation = generic{}
 
 type generic struct {
-	options Settings
+	keystore.Valuer[string]
 
-	middleware.Valuer[string]
+	options Settings
 }
 
 func (g generic) Configuration(options ...Variadic) Implementation {
@@ -34,17 +37,23 @@ func (generic) Value(ctx context.Context) string {
 }
 
 func (g generic) Middleware(next http.Handler) http.Handler {
-	const name = "Service"
+	var name = str.Title(key.String(), func(o str.Options) {
+		o.Log = true
+	})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 
 		{
-			value := g.options.Service
+			value := str.Title(g.options.Service, func(o str.Options) {
+				o.Log = true
+			})
 
-			slog.DebugContext(ctx, fmt.Sprintf("Evaluating %s Middleware", name), slog.Group("context", slog.String(key.String(), value)))
+			slog.Log(ctx, logging.Trace, fmt.Sprintf("Evaluating %s Middleware", name), slog.Group("context", slog.String(string(key), value)))
 
 			ctx = context.WithValue(ctx, key, value)
+
+			w.Header().Set("X-Service-Name", value)
 		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))

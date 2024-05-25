@@ -6,15 +6,26 @@ import (
 	"log/slog"
 	"net/http"
 
-	"ethr.gg/server/internal/middleware"
+	"ethr.gg/str"
+
+	"ethr.gg/server/internal/keystore"
+	"ethr.gg/server/logging"
 )
 
 var implementation = generic{}
 
 type generic struct {
+	keystore.Valuer[string]
+	
 	options Settings
+}
 
-	middleware.Valuer[string]
+func (generic) Value(ctx context.Context) Version {
+	if v, ok := ctx.Value(key).(Version); ok {
+		return v
+	}
+
+	return Version{API: "N/A", Service: "N/A"}
 }
 
 func (g generic) Configuration(options ...Variadic) Implementation {
@@ -29,12 +40,10 @@ func (g generic) Configuration(options ...Variadic) Implementation {
 	return g
 }
 
-func (generic) Value(ctx context.Context) string {
-	return ctx.Value(key).(string)
-}
-
 func (g generic) Middleware(next http.Handler) http.Handler {
-	const name = "Version"
+	var name = str.Title(key.String(), func(o str.Options) {
+		o.Log = true
+	})
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -42,9 +51,14 @@ func (g generic) Middleware(next http.Handler) http.Handler {
 		{
 			value := g.options.Version
 
-			slog.DebugContext(ctx, fmt.Sprintf("Evaluating %s Middleware", name), slog.Group("context", slog.String(key.String(), value)))
+			api, service := value.API, value.Service
+
+			slog.Log(ctx, logging.Trace, fmt.Sprintf("Evaluating %s Middleware", name), slog.Group("context", slog.Group(string(key), slog.String("api", api), slog.String("service", service))))
 
 			ctx = context.WithValue(ctx, key, value)
+
+			w.Header().Set("X-API-Version", api)
+			w.Header().Set("X-Service-Version", service)
 		}
 
 		next.ServeHTTP(w, r.WithContext(ctx))

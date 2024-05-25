@@ -6,15 +6,18 @@ replace (
 	ethr.gg/atomics => ../../library/atomics
 	ethr.gg/headers => ../../library/headers
 	ethr.gg/server => ../../library/server
+	ethr.gg/str => ../../library/str
 )
 
 require (
+	ethr.gg/headers v0.0.0-00010101000000-000000000000
 	ethr.gg/server v0.0.0-00010101000000-000000000000
 	gopkg.in/yaml.v3 v3.0.1
 	sigs.k8s.io/kustomize/api v0.17.2
 )
 
 require (
+	ethr.gg/str v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

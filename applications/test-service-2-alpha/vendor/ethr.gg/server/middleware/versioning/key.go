@@ -1,5 +1,5 @@
 package versioning
 
-import "ethr.gg/server/internal/middleware"
+import "ethr.gg/server/internal/keystore"
 
-var key = middleware.Keys().Version()
+var key = keystore.Keys().Version()

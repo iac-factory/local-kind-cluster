@@ -1,5 +1,5 @@
 package telemetry
 
-import "ethr.gg/server/internal/middleware"
+import "ethr.gg/server/internal/keystore"
 
-var key = middleware.Keys().Telemetry()
+var key = keystore.Keys().Telemetry()

@@ -38,6 +38,10 @@ func Propagate(source, target *http.Request) {
 	for key := range headers {
 		header := headers[key]
 
-		target.Header.Add(header, source.Header.Get(header))
+		assignment := source.Header.Get(header)
+
+		if assignment != "" {
+			target.Header.Add(header, source.Header.Get(header))
+		}
 	}
 }

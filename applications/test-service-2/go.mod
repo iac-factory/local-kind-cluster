@@ -6,6 +6,7 @@ replace (
 	ethr.gg/atomics => ../../library/atomics
 	ethr.gg/headers => ../../library/headers
 	ethr.gg/server => ../../library/server
+	ethr.gg/str => ../../library/str
 )
 
 require (
@@ -16,6 +17,7 @@ require (
 )
 
 require (
+	ethr.gg/str v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

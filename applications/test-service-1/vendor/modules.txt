@@ -1,12 +1,21 @@
+# ethr.gg/headers v0.0.0-00010101000000-000000000000 => ../../library/headers
+## explicit; go 1.22.1
+ethr.gg/headers
 # ethr.gg/server v0.0.0-00010101000000-000000000000 => ../../library/server
 ## explicit; go 1.22.1
 ethr.gg/server
-ethr.gg/server/internal/middleware
+ethr.gg/server/internal/keystore
+ethr.gg/server/logging
+ethr.gg/server/logging/color
 ethr.gg/server/middleware
 ethr.gg/server/middleware/name
 ethr.gg/server/middleware/path
+ethr.gg/server/middleware/server
 ethr.gg/server/middleware/telemetry
 ethr.gg/server/middleware/versioning
+# ethr.gg/str v0.0.0-00010101000000-000000000000 => ../../library/str
+## explicit; go 1.22.1
+ethr.gg/str
 # github.com/cenkalti/backoff/v4 v4.3.0
 ## explicit; go 1.18
 github.com/cenkalti/backoff/v4
@@ -179,6 +188,12 @@ golang.org/x/sys/windows/registry
 golang.org/x/term
 # golang.org/x/text v0.15.0
 ## explicit; go 1.18
+golang.org/x/text/cases
+golang.org/x/text/internal
+golang.org/x/text/internal/language
+golang.org/x/text/internal/language/compact
+golang.org/x/text/internal/tag
+golang.org/x/text/language
 golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
 golang.org/x/text/unicode/bidi
@@ -323,3 +338,4 @@ sigs.k8s.io/yaml/goyaml.v3
 # ethr.gg/atomics => ../../library/atomics
 # ethr.gg/headers => ../../library/headers
 # ethr.gg/server => ../../library/server
+# ethr.gg/str => ../../library/str

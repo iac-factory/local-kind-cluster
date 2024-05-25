@@ -14,6 +14,7 @@ import (
 
 	"ethr.gg/headers"
 	"ethr.gg/server"
+	"ethr.gg/server/logging"
 	"ethr.gg/server/middleware"
 )
 
@@ -39,12 +40,14 @@ func main() {
 
 		var payload = map[string]interface{}{
 			middleware.New().Service().Value(ctx): map[string]interface{}{
-				"service": middleware.New().Service().Value(ctx),
-				"version": middleware.New().Version().Value(ctx),
+				"service":     middleware.New().Service().Value(ctx),
+				"version":     middleware.New().Version().Value(ctx).Service,
+				"api-version": middleware.New().Version().Value(ctx).API,
 			},
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("X-Request-ID", r.Header.Get("X-Request-ID"))
 		w.WriteHeader(http.StatusOK)
 
 		json.NewEncoder(w).Encode(payload)
@@ -88,7 +91,12 @@ func main() {
 func init() {
 	flag.Parse()
 
-	slog.SetLogLoggerLevel(slog.LevelDebug)
+	level := slog.Level(-8)
+	if os.Getenv("CI") == "true" {
+		level = slog.LevelDebug
+	}
+
+	slog.SetLogLoggerLevel(level.Level())
 
 	if service == "service" && os.Getenv("CI") != "true" {
 		_, file, _, ok := runtime.Caller(0)
@@ -96,4 +104,9 @@ func init() {
 			service = filepath.Base(filepath.Dir(file))
 		}
 	}
+
+	options := logging.Options{Service: service, Settings: &slog.HandlerOptions{Level: level}}
+	handler := logging.Logger(os.Stdout, options)
+
+	slog.SetDefault(slog.New(handler))
 }

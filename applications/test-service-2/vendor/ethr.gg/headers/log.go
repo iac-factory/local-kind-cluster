@@ -3,6 +3,8 @@ package headers
 import (
 	"log/slog"
 	"net/http"
+	"slices"
+	"strings"
 )
 
 // Type represents the request's incoming or outgoing context type.
@@ -29,6 +31,20 @@ func (t Type) message() string {
 	}
 }
 
+// x represents the string log message deriving from the Type.
+//
+//   - Internal module usage only.
+func (t Type) x() string {
+	switch t {
+	case Incoming:
+		return "Incoming Request X-Header(s)"
+	case Outgoing:
+		return "Outgoing Request -XHeader(s)"
+	default:
+		return "Unknown Request Type"
+	}
+}
+
 // Log logs the information about the HTTP request headers to the standard logger.
 // This information contains all request headers along with their first value.
 // The whole log message is grouped by the host. Total number of headers is also provided.
@@ -46,8 +62,36 @@ func (t Type) message() string {
 func Log(r *http.Request, t Type) {
 	ctx := r.Context()
 
-	total := len(r.Header)
-	for header, values := range r.Header {
-		slog.DebugContext(ctx, t.message(), slog.Group(r.Host, slog.Int("total", total), slog.String("header", header), slog.String("value", values[0])))
+	exclusions := []string{
+		"Accept",
+		"Accept-Encoding",
+		"Accept-Language",
+		"Connection",
+		"Cache-Control",
+		"Sec-Fetch-Dest",
+		"Sec-Fetch-Mode",
+		"Sec-Fetch-Site",
+		"Upgrade-Insecure-Requests",
 	}
+
+	headers := make(map[string]string)
+	for header, values := range r.Header {
+		if !(slices.Contains(exclusions, header)) && len(values) >= 1 && values[0] != "" {
+			headers[header] = values[0]
+		}
+	}
+
+	slog.Log(ctx, slog.LevelDebug, t.message(), slog.Any("$", headers))
+}
+
+func X(r *http.Request, t Type) {
+	ctx := r.Context()
+	headers := make(map[string]string)
+	for header, values := range r.Header {
+		if strings.HasPrefix(http.CanonicalHeaderKey(header), "X") && len(values) >= 1 {
+			headers[header] = values[0]
+		}
+	}
+
+	slog.Log(ctx, slog.LevelDebug, t.x(), slog.Any("$", headers))
 }

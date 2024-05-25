@@ -10,5 +10,8 @@ deploy: apply
 apply:
 	kubectl apply --kustomize .
 
+kustomize:
+	find . -type d -mindepth 1 -maxdepth 1 -execdir kubectl apply --wait --kustomize . \;
+
 clean:
 	find . -type d -mindepth 1 -maxdepth 1 -execdir kubectl delete --force --wait --ignore-not-found --all --kustomize . \;
