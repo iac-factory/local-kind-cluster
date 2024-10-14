@@ -1,0 +1,27 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+    name: istio-base
+    namespace: istio-system
+spec:
+    releaseName: istio-base
+    targetNamespace: istio-system
+    interval: 1m
+    timeout: 5m
+    install:
+        remediation:
+            retries: 3
+    upgrade:
+        remediation:
+            retries: 3
+    test:
+        enable: true
+    driftDetection:
+        mode: disabled
+        ignore: []
+    chartRef:
+        kind: HelmChart
+        name: istio-base
+        namespace: istio-system
+    values: {}

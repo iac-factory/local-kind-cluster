@@ -1,0 +1,29 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+    name: cert-manager
+    namespace: cert-manager
+spec:
+    releaseName: cert-manager
+    targetNamespace: cert-manager
+    interval: 1m
+    timeout: 5m
+    install:
+        remediation:
+            retries: 3
+    upgrade:
+        remediation:
+            retries: 3
+    test:
+        enable: true
+    driftDetection:
+        mode: enabled
+        ignore: []
+    chartRef:
+        kind: HelmChart
+        name: cert-manager
+        namespace: cert-manager
+    values:
+        crds:
+            enabled: true

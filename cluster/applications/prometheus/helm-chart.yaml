@@ -1,0 +1,12 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+    name: prometheus
+    namespace: prometheus
+spec:
+    interval: 10m
+    chart: kube-prometheus-stack
+    sourceRef:
+        kind: HelmRepository
+        name: prometheus
+    version: "58.5.1"

@@ -1,0 +1,12 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmChart
+metadata:
+    name: istiod
+    namespace: istio-system
+spec:
+    interval: 10m
+    chart: istiod
+    sourceRef:
+        kind: HelmRepository
+        name: istio
+    version: "1.23.x"

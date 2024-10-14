@@ -1,0 +1,41 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+    name: istiod
+    namespace: istio-system
+spec:
+    releaseName: istiod
+    targetNamespace: istio-system
+    interval: 1m
+    timeout: 5m
+    install:
+        remediation:
+            retries: 3
+    upgrade:
+        remediation:
+            retries: 3
+    test:
+        enable: true
+    driftDetection:
+        mode: disabled
+        ignore: []
+    chartRef:
+        kind: HelmChart
+        name: istiod
+        namespace: istio-system
+    values:
+        defaults:
+            meshConfig:
+                enableTracing: true
+                accessLogFile: /dev/stdout
+                defaultConfig:
+                    tracing: {}
+                extensionProviders:
+                    -   name: otel-tracing
+                        opentelemetry:
+                            port: 4317
+                            service: opentelemetry-collector.observability.svc.cluster.local
+            global:
+                proxy:
+                    logLevel: info

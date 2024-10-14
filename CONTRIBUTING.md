@@ -3,61 +3,31 @@
 ## Usage
 
 1. Setup Load Balancer.
-```bash
-go install sigs.k8s.io/cloud-provider-kind@latest
-sudo install "$(go env --json | jq -r ".GOPATH")/bin/cloud-provider-kind" /usr/local/bin
-sudo cloud-provider-kind
-```
+
+    ```bash
+    go install sigs.k8s.io/cloud-provider-kind@latest
+    sudo install "$(go env --json | jq -r ".GOPATH")/bin/cloud-provider-kind" /usr/local/bin
+    sudo cloud-provider-kind
+    ```
+
 1. *Local* - Create cluster.
     ```bash
-    kind create cluster --config "configuration.yaml"
+    kind create cluster --config "configuration.yaml" --verbosity 9
     kubectl config set-context "$(printf "%s-kind" "kind")"
     ```
-1. Establish Secret(s).
+
+1. Install `flux`.
+
     ```bash
-    mkdir -p ./kustomize/secrets/.secrets
+        # flux bootstrap github --repository "https://github.com/iac-factory/cluster-management" \
+        #     --owner "iac-factory" \
+        #     --private "false" \
+        #     --personal "false" \
+        #     --path "clusters/local"
    
-    printf "%s" "${GITHUB_USER}" > ./kustomize/secrets/.secrets/username
-    printf "%s" "${GITHUB_TOKEN}" > ./kustomize/secrets/.secrets/password
+    kubectl apply -f https://github.com/fluxcd/flux2/releases/latest/download/install.yaml
+    ```
 
-    function access-key-id() {
-        printf "%s" "$(aws secretsmanager get-secret-value --secret-id "local/external-secrets/provider/aws/credentials" --query SecretString | jq -r | jq -r ".\"aws-access-key-id\"")"
-    }
-
-    function secret-access-key() {
-        printf "%s" "$(aws secretsmanager get-secret-value --secret-id "local/external-secrets/provider/aws/credentials" --query SecretString | jq -r | jq -r ".\"aws-secret-access-key\"")"
-    }
-
-    printf "%s" "$(access-key-id)" > ./kustomize/secrets/.secrets/aws-access-key-id
-    printf "%s" "$(secret-access-key)" > ./kustomize/secrets/.secrets/aws-secret-access-key
-    
-    kubectl apply --kustomize ./kustomize/secrets --wait
-    ```
-1. Bootstrap.
-    ```bash
-    flux bootstrap github --repository "https://github.com/iac-factory/cluster-management" \
-        --owner "iac-factory" \
-        --private "false" \
-        --personal "false" \
-        --path "clusters/local"
-    ```
-1. Sync local cluster repository's `vendors`.
-    ```bash
-    git submodule update --remote --recursive
-    ```
-1. Add `kustomization.yaml` to new cluster directory.
-    ```bash
-    cat << EOF > ./vendors/cluster-management/clusters/local/kustomization.yaml
-    apiVersion: kustomize.config.k8s.io/v1beta1
-    kind: Kustomization
-    resources: []
-    EOF
-    ```
-1. Optionally, update the `Kustomization.flux-system.spec.interval`. 
-1. Update.
-    ```bash
-    git submodule foreach "git add . && git commit --message \"Git Submodule Update(s)\" && git push -u origin HEAD:main" 
-    ```
 1. Start the local registry.
     ```bash
     bash registry.bash

@@ -1,0 +1,48 @@
+#---
+#apiVersion: helm.toolkit.fluxcd.io/v2
+#kind: HelmRelease
+#metadata:
+#    name: prometheus
+#    namespace: prometheus
+#spec:
+#    releaseName: kube-prometheus-stack
+#    targetNamespace: prometheus
+#    interval: 1m
+#    chart:
+#        metadata:
+#            labels:
+#                app.kubernetes.io/name: prometheus
+#        spec:
+#            chart: kube-prometheus-stack
+#            version: "58.5.1"
+#            sourceRef:
+#                kind: HelmRepository
+#                name: prometheus
+#                namespace: prometheus
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+    name: prometheus
+    namespace: prometheus
+spec:
+    releaseName: prometheus
+    targetNamespace: prometheus
+    interval: 1m
+    timeout: 5m
+    install:
+        remediation:
+            retries: 3
+    upgrade:
+        remediation:
+            retries: 3
+    test:
+        enable: true
+    driftDetection:
+        mode: disabled
+        ignore: []
+    chartRef:
+        kind: HelmChart
+        name: prometheus
+        namespace: prometheus
+    values: {}
