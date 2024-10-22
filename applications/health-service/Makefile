@@ -59,7 +59,7 @@ region 		= $(shell aws configure get region)
 
 prepare:
 	@$(information) Executing Module Vendoring
-	@go mod tidy && go mod vendor
+	@go mod tidy # && go mod vendor
 	@go test ./... --tags local
 	@$(ok) Build Preparation
 
@@ -91,8 +91,12 @@ deploy:
 
 deploy-development:
 	@$(information) Updating Kustomization Image Patches
-	@ethr-cli kubernetes kustomization update image --file kustomize/development/kustomization.yaml --image service:latest --name $(service) --tag $(version) --registry "localhost:5050"
+	@versioning-cli kubernetes kustomization update image --file kustomize/development/kustomization.yaml --image service:latest --name $(service) --tag $(version) --registry "localhost:5050"
 	@$(ok) Update
+
+	@$(information) Ensuring Development Namespace
+	@kubectl create namespace development --dry-run=client -o yaml | kubectl apply -f -
+	@$(ok) Namespace
 
 	@$(information) Applying Kuberenetes Manifests
 	@kubectl apply --kustomize ./kustomize/development --wait

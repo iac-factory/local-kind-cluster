@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/x-ethr/middleware/internal/random"
-	"github.com/x-ethr/middleware/types"
+	"health-service/internal/middleware/internal/random"
+	"health-service/internal/middleware/types"
 )
 
 type generic struct {

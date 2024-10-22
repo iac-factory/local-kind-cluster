@@ -10,7 +10,7 @@ import (
 
 	"golang.org/x/term"
 
-	"github.com/x-ethr/color/internal"
+	"health-service/internal/color/internal"
 )
 
 // ANSI represents a string that contains ANSI escape codes for terminal colors.

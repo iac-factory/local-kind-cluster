@@ -13,34 +13,35 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/x-ethr/go-http-server/v2"
-	"github.com/x-ethr/go-http-server/v2/logging"
-	"github.com/x-ethr/go-http-server/v2/telemetry"
-	"github.com/x-ethr/go-http-server/v2/writer"
+	"health-service/internal/server"
+	"health-service/internal/server/logging"
+	"health-service/internal/server/telemetry"
+	"health-service/internal/server/writer"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
-	"github.com/x-ethr/middleware"
-	"github.com/x-ethr/middleware/logs"
-	"github.com/x-ethr/middleware/name"
-	"github.com/x-ethr/middleware/servername"
-	"github.com/x-ethr/middleware/timeout"
-	"github.com/x-ethr/middleware/tracing"
-	"github.com/x-ethr/middleware/versioning"
 	"go.opentelemetry.io/otel"
+
+	"health-service/internal/middleware"
+	"health-service/internal/middleware/logs"
+	"health-service/internal/middleware/name"
+	"health-service/internal/middleware/servername"
+	"health-service/internal/middleware/timeout"
+	"health-service/internal/middleware/tracing"
+	"health-service/internal/middleware/versioning"
 )
 
-// sname is a dynamically linked string value - defaults to "server" - which represents the server name.
-const sname string = "server"
+// sname is a dynamically linked string value - defaults to "local-http-server" - which represents the server name.
+var sname string = "local-http-server"
 
-// service is a dynamically linked string value - defaults to "service" - which represents the service name.
-const service string = "service"
+// service is a dynamically linked string value - defaults to "" - which represents the service name.
+var service string
 
 // version is a dynamically linked string value - defaults to "latest" - which represents the service's build version.
-const version string = "latest"
+var version string = "latest"
 
 // environment is dynamically updated according to "ENVIRONMENT" environment variable.
-const environment string = "local"
+var environment string = "local"
 
 // ctx, cancel represent the server's runtime context and cancellation handler.
 var ctx, cancel = context.WithCancel(context.Background())
@@ -53,6 +54,9 @@ var tracer = otel.Tracer(service)
 
 // logger represents an [slog.Logger] interface -- hydrated during the init call and then used in middleware found in main.
 var logger *slog.Logger
+
+// level represents the runtime's default log level. note that this variable is evaluated and changed according to a wide variety of factors.
+var level = logging.Global()
 
 func main() {
 	// --> Middleware
@@ -72,15 +76,24 @@ func main() {
 	// --> HTTP Handler(s)
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /health", server.Health)
+
+	mux.Handle("GET /", otelhttp.WithRouteTag("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		const name = "metadata"
+
 		ctx := r.Context()
+		ctx, span := middleware.New().Tracer().Value(ctx).Start(ctx, name)
+
+		defer span.End()
+
+		instance := middleware.New()
 		var response = map[string]interface{}{
 			middleware.New().Service().Value(ctx): map[string]interface{}{
 				"environment": environment,
-				"path":        middleware.New().Path().Value(ctx),
-				"service":     middleware.New().Service().Value(ctx),
-				"api":         middleware.New().Version().Value(ctx).API,
-				"version":     middleware.New().Version().Value(ctx).Service,
+				"path":        instance.Path().Value(ctx),
+				"service":     instance.Service().Value(ctx),
+				"api":         instance.Version().Value(ctx).API,
+				"version":     instance.Version().Value(ctx).Service,
 			},
 		}
 
@@ -89,7 +102,7 @@ func main() {
 		json.NewEncoder(w).Encode(response)
 
 		return
-	}))
+	})))
 
 	// --> Start the HTTP server
 	slog.Info("Starting Server ...", slog.String("local", fmt.Sprintf("http://localhost:%s", *(port))))
@@ -141,14 +154,7 @@ func main() {
 func init() {
 	flag.Parse()
 
-	level := slog.Level(-8)
-	if os.Getenv("CI") == "true" {
-		level = slog.LevelDebug
-	}
-
-	logging.Level(level)
-	slog.SetLogLoggerLevel(level)
-	if service == "service" && os.Getenv("CI") != "true" {
+	if service == "" && os.Getenv("CI") != "true" {
 		_, file, _, ok := runtime.Caller(0)
 		if ok {
 			service = filepath.Base(filepath.Dir(file))
@@ -164,7 +170,11 @@ func init() {
 		environment = v
 	}
 
+	defer os.Setenv("ENVIRONMENT", environment)
+
 	handler := logging.Logger(func(o *logging.Options) { o.Service = service })
+
 	logger = slog.New(handler)
+
 	slog.SetDefault(logger)
 }

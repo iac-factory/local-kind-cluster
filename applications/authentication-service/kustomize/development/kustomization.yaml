@@ -1,0 +1,16 @@
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+namespace: development
+commonLabels:
+    environment: development
+    gateway: api-gateway
+commonAnnotations:
+    environment: development
+patches:
+    - path: deployment.yaml
+images:
+    - name: service:latest
+      newName: localhost:5050/authentication-service
+      newTag: 0.2.35
+resources:
+    - ../base

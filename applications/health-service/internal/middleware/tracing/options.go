@@ -3,7 +3,7 @@ package tracing
 import (
 	"go.opentelemetry.io/otel/trace"
 
-	"github.com/x-ethr/middleware/types"
+	"health-service/internal/middleware/types"
 )
 
 type Settings struct {

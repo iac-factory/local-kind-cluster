@@ -1,7 +1,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmChart
 metadata:
-    name: prometheus
+    name: kube-prometheus-stack
     namespace: prometheus
 spec:
     interval: 10m

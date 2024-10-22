@@ -1,0 +1,158 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+    name: kiali-operator
+    namespace: kiali
+spec:
+    releaseName: kiali-operator
+    targetNamespace: kiali
+    interval: 10m
+    install:
+        remediation:
+            retries: 3
+    upgrade:
+        remediation:
+            retries: 3
+    test:
+        enable: true
+    driftDetection:
+        mode: enabled
+        ignore: []
+    chartRef:
+        kind: HelmChart
+        name: kiali-operator
+        namespace: kiali
+    values:
+        cr: # https://kiali.io/docs/configuration/kialis.kiali.io/
+            create: true
+            namespace: istio-system
+            spec:
+                auth:
+                    strategy: anonymous
+                external_services:
+                    custom_dashboards:
+                        discovery_auto_threshold: 10
+                        discovery_enabled: "auto"
+                        enabled: true
+                        is_core: false
+                        namespace_label: "namespace"
+                        prometheus:
+                            auth:
+                                ca_file: ""
+                                insecure_skip_verify: false
+                                password: ""
+                                token: ""
+                                type: "none"
+                                use_kiali_token: false
+                                username: ""
+                            cache_duration: 10
+                            cache_enabled: true
+                            cache_expiration: 300
+                            custom_headers: {}
+                            health_check_url: ""
+                            is_core: true
+                            query_scope: {}
+                            thanos_proxy:
+                                enabled: false
+                                retention_period: "7d"
+                                scrape_interval: "30s"
+                            url: "http://kube-prometheus-stack-prometheus.prometheus:9090"
+                    grafana:
+                        auth:
+                            ca_file: ""
+                            insecure_skip_verify: false
+                            password: ""
+                            token: ""
+                            type: "none"
+                            use_kiali_token: false
+                            username: ""
+                        dashboards:
+                            -   name: "Istio Service Dashboard"
+                                variables:
+                                    namespace: "var-namespace"
+                                    service: "var-service"
+                            -   name: "Istio Workload Dashboard"
+                                variables:
+                                    namespace: "var-namespace"
+                                    workload: "var-workload"
+                            -   name: "Istio Mesh Dashboard"
+                            -   name: "Istio Control Plane Dashboard"
+                            -   name: "Istio Performance Dashboard"
+                            -   name: "Istio Wasm Extension Dashboard"
+                        enabled: false
+                        health_check_url: ""
+                        in_cluster_url: "http://kube-prometheus-stack-grafana.prometheus:3000"
+                        is_core: false
+                        url: ""
+                    istio:
+                        component_status:
+                            components:
+                                -   app_label: "istiod"
+                                    is_core: true
+                                    is_proxy: false
+                            enabled: false # true
+                        config_map_name: "istio"
+                        envoy_admin_local_port: 15000
+                        gateway_api_classes: [ ]
+                        istio_api_enabled: true
+                        # default: istio_canary_revision is undefined
+                        istio_canary_revision: {}
+                        istio_identity_domain: "svc.cluster.local"
+                        istio_injection_annotation: "sidecar.istio.io/inject"
+                        istio_sidecar_annotation: "sidecar.istio.io/status"
+                        istio_sidecar_injector_config_map_name: "istio-sidecar-injector"
+                        istiod_deployment_name: "istiod"
+                        istiod_pod_monitoring_port: 15014
+                        root_namespace: ""
+                        url_service_version: ""
+                    prometheus:
+                        auth:
+                            ca_file: ""
+                            insecure_skip_verify: false
+                            password: ""
+                            token: ""
+                            type: "none"
+                            use_kiali_token: false
+                            username: ""
+                        cache_duration: 10
+                        cache_enabled: true
+                        cache_expiration: 300
+                        # default: custom_headers is empty
+                        custom_headers: {}
+                        health_check_url: ""
+                        is_core: true
+                        # default: query_scope is empty
+                        query_scope: {}
+                        thanos_proxy:
+                            enabled: false
+                            retention_period: "7d"
+                            scrape_interval: "30s"
+                        url: "http://kube-prometheus-stack-prometheus.prometheus:9090"
+                    tracing:
+                        auth:
+                            ca_file: ""
+                            insecure_skip_verify: false
+                            password: ""
+                            token: ""
+                            type: "none"
+                            use_kiali_token: false
+                            username: ""
+                        # default: custom_headers is empty
+                        custom_headers: {}
+                        enabled: true
+                        grpc_port: 9095
+                        health_check_url: ""
+                        in_cluster_url:  "http://tracing.istio-system:16685/jaeger"
+                        is_core: false
+                        namespace_selector: true
+                        provider: "jaeger"
+                        # default: query_scope is empty
+                        query_scope: {}
+                        query_timeout: 5
+                        tempo_config:
+                            datasource_uid: ""
+                            org_id: ""
+                        url: "http://localhost:16686"
+                        use_grpc: true
+                        whitelist_istio_system: [ "jaeger-query" ]

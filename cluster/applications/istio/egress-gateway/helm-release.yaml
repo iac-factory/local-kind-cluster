@@ -1,0 +1,36 @@
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+    name: istio-egressgateway
+    namespace: istio-system
+spec:
+    releaseName: istio-egressgateway
+    targetNamespace: istio-system
+    interval: 1m
+    timeout: 5m
+    install:
+        disableWait: false
+        remediation:
+            retries: 3
+    upgrade:
+        remediation:
+            retries: 3
+    test:
+        enable: true
+    driftDetection:
+        mode: disabled
+        ignore: []
+    chartRef:
+        kind: HelmChart
+        name: istio-egressgateway
+        namespace: istio-system
+    values:
+        service:
+            type: ClusterIP
+        autoscaling:
+            enabled: true
+        resources:
+            limits:
+                cpu: 100m
+                memory: 256Mi

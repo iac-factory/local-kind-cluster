@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/x-ethr/middleware/types"
+	"health-service/internal/middleware/types"
 )
 
 type generic struct {

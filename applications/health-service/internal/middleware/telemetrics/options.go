@@ -3,7 +3,7 @@ package telemetrics
 import (
 	"log/slog"
 
-	"github.com/x-ethr/middleware/types"
+	"health-service/internal/middleware/types"
 )
 
 type Settings struct {

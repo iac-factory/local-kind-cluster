@@ -11,6 +11,7 @@
     ```
 
 1. *Local* - Create cluster.
+
     ```bash
     kind create cluster --config "configuration.yaml" --verbosity 9
     kubectl config set-context "$(printf "%s-kind" "kind")"
@@ -29,8 +30,28 @@
     ```
 
 1. Start the local registry.
+
     ```bash
     bash registry.bash
+    ```
+
+1. Install `postgres-operator`.
+
+    ```bash
+    kubectl apply --server-side -f https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.24/releases/cnpg-1.24.1.yaml
+    ```
+   
+1. Port forward `postgres`.
+
+    ```bash
+    kubectl port-forward --namespace development services/postgres-cluster-rw 5432:5432
+    ```
+
+
+1. Apply the manifests.
+
+    ```bash
+    kubectl apply --kustomize ./cluster
     ```
 
 ## Istio

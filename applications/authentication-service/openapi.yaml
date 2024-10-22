@@ -1,0 +1,194 @@
+openapi: 3.0.3
+info:
+    title: Authentication-Service
+    description: |
+        # Authentication Service
+        
+        ## Usage
+        
+        ###### Local
+        
+        ```bash
+        go run --tags local .
+        ```
+    version: 1.0.0
+
+servers:
+    -   url: http://localhost:8080
+    -   url: http://localhost:8080/v1/authentication-service
+
+paths:
+    /:
+        get:
+            summary: Service metadata
+            responses:
+                200:
+                    $ref: "#/components/responses/metadata"
+    /login:
+        post:
+            summary: Basic user authentication
+            requestBody:
+                $ref: "#/components/requestBodies/login"
+            responses:
+                200:
+                    $ref: "#/components/responses/login-success"
+    /health:
+        get:
+            summary: Health probe endpoint
+            responses:
+                200:
+                    $ref: "#/components/responses/health"
+    /refresh:
+        post:
+            summary: Generate a refresh token
+            responses:
+                200:
+                    description: ...
+            security:
+                -   Bearer: [ ]
+                -   Cookie: [ ]
+    /register:
+        post:
+            summary: Register a new user
+            requestBody:
+                $ref: "#/components/requestBodies/registration"
+            responses:
+                201:
+                    $ref: "#/components/responses/registration-success"
+                409:
+                    $ref: "#/components/responses/registration-conflict"
+
+components:
+    requestBodies:
+        registration:
+            description: Optional description in *Markdown*
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            email:
+                                type: string
+                                format: email
+                            password:
+                                type: string
+                        required:
+                            - email
+                            - password
+                    example:
+                        email: "segmentational@gmail.com"
+                        password: "P@ssw0rd!"
+        login:
+            description: Login payload
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            email:
+                                type: string
+                                format: email
+                            password:
+                                type: string
+                        required:
+                            - email
+                            - password
+                    example:
+                        email: "segmentational@gmail.com"
+                        password: "P@ssw0rd!"
+
+    responses:
+        registration-conflict:
+            description: User registration conflict when a user already exists with a given email address.
+            content:
+                text/plain; charset=utf-8:
+                    schema:
+                        type: string
+                application/json:
+                    schema:
+                        type: object
+        registration-success:
+            description: A jwt-token response.
+            headers:
+                Set-Cookie:
+                    schema:
+                        type: string
+            content:
+                text/plain:
+                    schema:
+                        type: string
+        login-success:
+            description: A jwt-token response.
+            headers:
+                Set-Cookie:
+                    schema:
+                        type: string
+            content:
+                text/plain:
+                    schema:
+                        type: string
+        health:
+            description: A health check response used by internal probes.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            status:
+                                type: string
+                                example: ok
+        metadata:
+            description: An endpoint response used as entry points by microservices.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        additionalProperties:
+                            type: string
+                            example: example-service
+                            properties:
+                                path:
+                                    type: string
+                                    example: /
+                                service:
+                                    type: string
+                                    example: example-service
+                                version:
+                                    type: string
+                                    example: 1.0.0
+                                    default: development
+                    example:
+                        example-service:
+                            path: /
+                            service: example-service
+                            version: 1.0.0
+
+    securitySchemes:
+        Basic:
+            type: http
+            scheme: basic
+        Bearer:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+        Cookie:
+            type: apiKey
+            in: cookie
+            name: token
+        API:
+            type: apiKey
+            in: header
+            name: X-API-Key
+        OpenID:
+            type: openIdConnect
+            openIdConnectUrl: https://example.com/.well-known/openid-configuration
+        OAuth2:
+            type: oauth2
+            flows:
+                authorizationCode:
+                    authorizationUrl: https://example.com/oauth/authorize
+                    tokenUrl: https://example.com/oauth/token
+                    scopes:
+                        read: Grants read access
+                        write: Grants write access
+                        admin: Grants access to admin operations

@@ -3,9 +3,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 namespace: development
 commonLabels:
     environment: development
+    gateway: api-gateway
+commonAnnotations:
+    environment: development
 images:
     - name: service:latest
       newName: localhost:5050/health-service
-      newTag: 0.0.38
+      newTag: 0.0.51
 resources:
     - ../base

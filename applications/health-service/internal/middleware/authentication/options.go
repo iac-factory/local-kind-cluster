@@ -6,7 +6,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"github.com/x-ethr/middleware/types"
+	"health-service/internal/middleware/types"
 )
 
 type Settings struct {

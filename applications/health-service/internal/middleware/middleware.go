@@ -3,19 +3,19 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/x-ethr/middleware/authentication"
-	"github.com/x-ethr/middleware/cors"
-	"github.com/x-ethr/middleware/envoy"
-	"github.com/x-ethr/middleware/logs"
-	"github.com/x-ethr/middleware/name"
-	"github.com/x-ethr/middleware/path"
-	"github.com/x-ethr/middleware/rip"
-	"github.com/x-ethr/middleware/servername"
-	"github.com/x-ethr/middleware/state"
-	"github.com/x-ethr/middleware/telemetrics"
-	"github.com/x-ethr/middleware/timeout"
-	"github.com/x-ethr/middleware/tracing"
-	"github.com/x-ethr/middleware/versioning"
+	"health-service/internal/middleware/authentication"
+	"health-service/internal/middleware/cors"
+	"health-service/internal/middleware/envoy"
+	"health-service/internal/middleware/logs"
+	"health-service/internal/middleware/name"
+	"health-service/internal/middleware/path"
+	"health-service/internal/middleware/rip"
+	"health-service/internal/middleware/servername"
+	"health-service/internal/middleware/state"
+	"health-service/internal/middleware/telemetrics"
+	"health-service/internal/middleware/timeout"
+	"health-service/internal/middleware/tracing"
+	"health-service/internal/middleware/versioning"
 )
 
 type generic struct{}

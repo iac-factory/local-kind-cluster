@@ -1,0 +1,14 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+    name: postgres-cluster
+    namespace: development
+spec:
+    instances: 3
+    description: ...
+    storage:
+        size: 1Gi
+    monitoring:
+        enablePodMonitor: true
+    logLevel: trace
+    enableSuperuserAccess: true

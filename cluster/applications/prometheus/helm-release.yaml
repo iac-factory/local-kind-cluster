@@ -1,24 +1,3 @@
-#---
-#apiVersion: helm.toolkit.fluxcd.io/v2
-#kind: HelmRelease
-#metadata:
-#    name: prometheus
-#    namespace: prometheus
-#spec:
-#    releaseName: kube-prometheus-stack
-#    targetNamespace: prometheus
-#    interval: 1m
-#    chart:
-#        metadata:
-#            labels:
-#                app.kubernetes.io/name: prometheus
-#        spec:
-#            chart: kube-prometheus-stack
-#            version: "58.5.1"
-#            sourceRef:
-#                kind: HelmRepository
-#                name: prometheus
-#                namespace: prometheus
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2
 kind: HelmRelease
@@ -26,7 +5,7 @@ metadata:
     name: prometheus
     namespace: prometheus
 spec:
-    releaseName: prometheus
+    releaseName: kube-prometheus-stack
     targetNamespace: prometheus
     interval: 1m
     timeout: 5m
@@ -43,6 +22,32 @@ spec:
         ignore: []
     chartRef:
         kind: HelmChart
-        name: prometheus
+        name: kube-prometheus-stack
         namespace: prometheus
-    values: {}
+    values:
+        grafana:
+            enabled: false
+        prometheus:
+            enabled: true
+            prometheusSpec:
+                hostNetwork: false
+                additionalScrapeConfigs:
+                    -   job_name: 'istiod'
+                        kubernetes_sd_configs:
+                            -   role: endpoints
+                                namespaces:
+                                    names:
+                                        - istio-system
+                        relabel_configs:
+                            -   source_labels: [ __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name ]
+                                action: keep
+                                regex: istiod;http-monitoring
+                    -   job_name: 'envoy-stats'
+                        metrics_path: /stats/prometheus
+                        kubernetes_sd_configs:
+                            -   role: pod
+
+                        relabel_configs:
+                            -   source_labels: [ __meta_kubernetes_pod_container_port_name ]
+                                action: keep
+                                regex: '.*-envoy-prom'

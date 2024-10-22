@@ -1,0 +1,2 @@
+- https://github.com/cloudnative-pg/cloudnative-pg/blob/main/docs/src/quickstart.md
+- https://github.com/cloudnative-pg/cloudnative-pg/blob/main/docs/src/installation_upgrade.md

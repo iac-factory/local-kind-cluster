@@ -8,7 +8,7 @@ The `color` package provides terminal escape sequences for giving life to consol
 
 ANSI escape sequence processing allows capable output device(s) to display color.
 
-While there exists other packages, `github.com/x-ethr/color` dynamically determines if the given output
+While there exists other packages, `health-service/internal/color` dynamically determines if the given output
 device is capable of escaping. For usage with CI and production systems, `color` will automatically disable
 adding color to user-provided value(s).
 
@@ -17,14 +17,14 @@ loggers, for example).
 
 ## Documentation
 
-Official `godoc` documentation (with examples) can be found at the [Package Registry](https://pkg.go.dev/github.com/x-ethr/color).
+Official `godoc` documentation (with examples) can be found at the [Package Registry](https://pkg.go.dev/health-service/internal/color).
 
 ## Usage
 
 ###### Add Package Dependency
 
 ```bash
-go get -u github.com/x-ethr/color
+go get -u health-service/internal/color
 ```
 
 ###### Import & Implement
@@ -37,7 +37,7 @@ package main
 import (
     "fmt"
 
-    "github.com/x-ethr/color"
+    "health-service/internal/color"
 )
 
 func main() {
@@ -68,7 +68,7 @@ func main() {
 ```
 
 - Please refer to the [code examples](./example_test.go) for additional usage and implementation details.
-- See https://pkg.go.dev/github.com/x-ethr/color for additional documentation.
+- See https://pkg.go.dev/health-service/internal/color for additional documentation.
 
 ## Contributions
 

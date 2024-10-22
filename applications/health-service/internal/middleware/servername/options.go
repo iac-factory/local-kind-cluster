@@ -1,6 +1,6 @@
 package servername
 
-import "github.com/x-ethr/middleware/types"
+import "health-service/internal/middleware/types"
 
 type Settings struct {
 

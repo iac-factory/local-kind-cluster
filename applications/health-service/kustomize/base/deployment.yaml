@@ -54,3 +54,20 @@ spec:
                             valueFrom:
                                 fieldRef:
                                     fieldPath: metadata.labels['service']
+
+                        -   name: LOCAL_POD_SERVICE_ACCOUNT
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: spec.serviceAccountName
+                        -   name: LOCAL_POD_IP
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: status.podIP
+                        -   name: LOCAL_NODE_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: spec.nodeName
+                        -   name: LOCAL_POD_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.name

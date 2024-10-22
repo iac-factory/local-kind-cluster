@@ -6,3 +6,5 @@ resources:
     - ./applications/prometheus
     - ./applications/istio
     - ./applications/istio-addons
+    # - ./applications/postgresql-operator
+    - ./infrastructure/postgresql-cluster

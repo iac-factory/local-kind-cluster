@@ -36,6 +36,15 @@ spec:
                         opentelemetry:
                             port: 4317
                             service: opentelemetry-collector.observability.svc.cluster.local
-            global:
-                proxy:
-                    logLevel: info
+                            resource_detectors:
+                                environment: {}
+        global:
+            omitSidecarInjectorConfigMap: false
+            proxy:
+                privileged: true
+                logLevel: info
+                resources:
+                    limits:
+                        cpu: 250m
+                        memory: 512Mi
+                tracer: "zipkin"

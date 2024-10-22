@@ -7,7 +7,7 @@ import (
 
 	"github.com/rs/cors"
 
-	"github.com/x-ethr/middleware/types"
+	"health-service/internal/middleware/types"
 )
 
 type generic struct {

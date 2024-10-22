@@ -1,6 +1,6 @@
 package versioning
 
-import "github.com/x-ethr/middleware/types"
+import "health-service/internal/middleware/types"
 
 type Settings struct {
 	// The `Version` struct represents the version information of a service or API. It has two fields: `API` and `Service`.

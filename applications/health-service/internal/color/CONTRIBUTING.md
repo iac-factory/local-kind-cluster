@@ -23,17 +23,17 @@ _The following section refers to publishing package(s) to https://pkg.go.dev._
     ```
 5. Make the module available, publicly.
     ```bash
-    GOPROXY=proxy.golang.org go list -m "github.com/x-ethr/example@v$(head VERSION)"
+    GOPROXY=proxy.golang.org go list -m "health-service/internal/example@v$(head VERSION)"
     ```
 
 Adding the package to `pkg.go.dev` may need to be requested. Navigate to the mirror's expected url, and follow
 instructions for requesting the addition.
 
-- Example: https://dev.go.dev/github.com/x-ethr/example
+- Example: https://dev.go.dev/health-service/internal/example
 
 Upon successful request, a message should be displayed:
 
-> _We're still working on “github.com/x-ethr/example”. Check back in a few minutes!_
+> _We're still working on “health-service/internal/example”. Check back in a few minutes!_
 
 For any other issues, consult the [official](https://pkg.go.dev/about#adding-a-package) documentation.
 
