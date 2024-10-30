@@ -5,7 +5,7 @@ import (
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
-	"authentication-service/internal/middleware"
+	"authentication-service/internal/library/middleware"
 
 	"authentication-service/internal/api/deletion"
 	"authentication-service/internal/api/login"

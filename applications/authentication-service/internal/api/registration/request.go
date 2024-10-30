@@ -3,7 +3,7 @@ package registration
 import (
 	"github.com/go-playground/validator/v10"
 
-	"authentication-service/internal/server"
+	"authentication-service/internal/library/server"
 )
 
 // Body represents the handler's structured request-body/

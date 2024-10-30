@@ -13,11 +13,11 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"authentication-service/internal/middleware"
-	"authentication-service/internal/middleware/telemetrics"
-	"authentication-service/internal/server"
-	"authentication-service/internal/server/cookies"
-	"authentication-service/internal/server/telemetry"
+	"authentication-service/internal/library/middleware"
+	"authentication-service/internal/library/middleware/telemetrics"
+	"authentication-service/internal/library/server"
+	"authentication-service/internal/library/server/cookies"
+	"authentication-service/internal/library/server/telemetry"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"

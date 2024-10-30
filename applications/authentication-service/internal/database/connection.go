@@ -14,7 +14,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"authentication-service/internal/levels"
+	"authentication-service/internal/library/levels"
 )
 
 var Pool atomic.Pointer[pgxpool.Pool]

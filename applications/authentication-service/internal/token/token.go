@@ -10,7 +10,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
-	"authentication-service/internal/middleware"
+	"authentication-service/internal/library/middleware"
 )
 
 var signer []byte

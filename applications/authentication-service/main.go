@@ -13,23 +13,23 @@ import (
 	"runtime"
 	"time"
 
-	"authentication-service/internal/server"
-	"authentication-service/internal/server/logging"
-	"authentication-service/internal/server/telemetry"
-	"authentication-service/internal/server/writer"
+	"authentication-service/internal/library/server"
+	"authentication-service/internal/library/server/logging"
+	"authentication-service/internal/library/server/telemetry"
+	"authentication-service/internal/library/server/writer"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"go.opentelemetry.io/otel"
 
-	"authentication-service/internal/middleware/logs"
-	"authentication-service/internal/middleware/name"
-	"authentication-service/internal/middleware/servername"
-	"authentication-service/internal/middleware/timeout"
-	"authentication-service/internal/middleware/tracing"
-	"authentication-service/internal/middleware/versioning"
+	"authentication-service/internal/library/middleware/logs"
+	"authentication-service/internal/library/middleware/name"
+	"authentication-service/internal/library/middleware/servername"
+	"authentication-service/internal/library/middleware/timeout"
+	"authentication-service/internal/library/middleware/tracing"
+	"authentication-service/internal/library/middleware/versioning"
 
-	"authentication-service/internal/middleware"
+	"authentication-service/internal/library/middleware"
 
 	"authentication-service/internal/api"
 )

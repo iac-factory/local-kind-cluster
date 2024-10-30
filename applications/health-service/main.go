@@ -13,22 +13,22 @@ import (
 	"runtime"
 	"time"
 
-	"health-service/internal/server"
-	"health-service/internal/server/logging"
-	"health-service/internal/server/telemetry"
-	"health-service/internal/server/writer"
+	"health-service/internal/library/server"
+	"health-service/internal/library/server/logging"
+	"health-service/internal/library/server/telemetry"
+	"health-service/internal/library/server/writer"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"go.opentelemetry.io/otel"
 
-	"health-service/internal/middleware"
-	"health-service/internal/middleware/logs"
-	"health-service/internal/middleware/name"
-	"health-service/internal/middleware/servername"
-	"health-service/internal/middleware/timeout"
-	"health-service/internal/middleware/tracing"
-	"health-service/internal/middleware/versioning"
+	"health-service/internal/library/middleware"
+	"health-service/internal/library/middleware/logs"
+	"health-service/internal/library/middleware/name"
+	"health-service/internal/library/middleware/servername"
+	"health-service/internal/library/middleware/timeout"
+	"health-service/internal/library/middleware/tracing"
+	"health-service/internal/library/middleware/versioning"
 )
 
 // sname is a dynamically linked string value - defaults to "local-http-server" - which represents the server name.
@@ -153,7 +153,6 @@ func main() {
 
 func init() {
 	flag.Parse()
-
 	if service == "" && os.Getenv("CI") != "true" {
 		_, file, _, ok := runtime.Caller(0)
 		if ok {

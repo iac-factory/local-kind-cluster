@@ -11,9 +11,9 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"authentication-service/internal/middleware"
+	"authentication-service/internal/library/middleware"
 
-	"authentication-service/internal/middleware/authentication"
+	"authentication-service/internal/library/middleware/authentication"
 
 	"authentication-service/internal/database"
 	"authentication-service/models/users"
