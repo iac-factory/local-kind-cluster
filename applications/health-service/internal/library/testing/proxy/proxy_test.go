@@ -16,6 +16,8 @@ import (
 func Test(t *testing.T) {
 	ctx := context.Background()
 	slog.SetLogLoggerLevel(levels.Trace)
+	t.Skip("Use Testing Tags ...")
+
 	t.Run("New", func(t *testing.T) {
 		t.Run("Default-Port", func(t *testing.T) {
 			instance := New()

@@ -72,7 +72,8 @@ func Test(t *testing.T) {
 
 				slog.Log(ctx, level, "Test Message")
 
-				if !(strings.Contains(w.String(), "$")) {
+				comparator := fmt.Sprintf("%s\n", "{}")
+				if !(strings.HasSuffix(w.String(), comparator)) {
 					t.Errorf("Log Output Should Contain Suffix ({}), Received: %s", w.String())
 				}
 
