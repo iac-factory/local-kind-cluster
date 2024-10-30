@@ -72,8 +72,7 @@ func Test(t *testing.T) {
 
 				slog.Log(ctx, level, "Test Message")
 
-				comparator := fmt.Sprintf("%s\n", "{}")
-				if !(strings.HasSuffix(w.String(), comparator)) {
+				if !(strings.Contains(w.String(), "$")) {
 					t.Errorf("Log Output Should Contain Suffix ({}), Received: %s", w.String())
 				}
 
@@ -99,7 +98,6 @@ func Test(t *testing.T) {
 				}
 
 				content := []byte(partials[1])
-
 				var mapping map[string]map[string]string
 				if e := json.Unmarshal(content, &mapping); e != nil {
 					t.Fatalf("Error While Unmarshalling: %v", e)

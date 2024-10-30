@@ -71,7 +71,7 @@ tidy:
 	@go mod tidy
 
 test: tidy
-	@go test ./...
+	@go test -v ./...
 
 # --> patch
 

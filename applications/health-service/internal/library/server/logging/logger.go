@@ -83,6 +83,7 @@ type Handler struct {
 	slog.Handler
 
 	service  string
+	source   bool
 	settings *slog.HandlerOptions
 
 	writer io.Writer
@@ -141,7 +142,7 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 		return fmt.Errorf("invalid, unknown level: %s", record.Level.String())
 	}
 
-	fields := make(map[string]interface{}, record.NumAttrs())
+	fields := make(map[string]interface{})
 
 	var evaluate = func(a slog.Attr) bool {
 		if kind := a.Value.Kind(); kind == slog.KindGroup {
@@ -251,6 +252,8 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 		h.logger.SetPrefix(prefix)
 	}
 
+	// fields["source"] = fmt.Sprintf("file://%s:%d", frame(3).File, frame(3).Line)
+
 	var buffer []byte
 	if record.Message == "HTTP(s) Request" || record.Message == "Middleware" || record.Message == "Response" {
 		var e error
@@ -282,7 +285,13 @@ func (h *Handler) Handle(ctx context.Context, record slog.Record) error {
 		}
 	}
 
-	h.logger.Println(color.Color().Dim(format), level, message, color.Color().White(string(buffer)))
+	if !(h.source) || (strings.Contains(frame(3).File, "golang.org/toolchain")) {
+		h.logger.Println(color.Color().Dim(format), level, message, color.Color().White(string(buffer)))
+	} else {
+		source := fmt.Sprintf("(%s)", color.Color().White(fmt.Sprintf("file://%s:%d", frame(3).File, frame(3).Line)))
+
+		h.logger.Println(color.Color().Dim(format), level, source, message, color.Color().White(string(buffer)))
+	}
 
 	return nil
 }
@@ -308,6 +317,7 @@ func (h *Handler) WithGroup(name string) slog.Handler {
 		settings: h.settings,
 		logger:   h.logger,
 		group:    name,
+		source:   h.source,
 	}
 }
 
@@ -325,6 +335,8 @@ func Logger(settings ...Variadic) slog.Handler {
 		settings:   o.Settings,
 		logger:     log.New(o.Writer, "", 0),
 		attributes: make([]slog.Attr, 0),
+		source:     o.Source,
+		group:      o.Group,
 	}
 
 	if logger.Load() != nil && logger.Load().(string) == "json" {

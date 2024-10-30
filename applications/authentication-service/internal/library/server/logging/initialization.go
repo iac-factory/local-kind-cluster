@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"authentication-service/internal/library/levels"
+	"health-service/internal/library/levels"
 )
 
 func init() { // USER > LOG_LEVEL > CI > DEFAULT

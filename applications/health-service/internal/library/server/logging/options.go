@@ -8,6 +8,8 @@ import (
 
 type Options struct {
 	Service  string
+	Group    string
+	Source   bool
 	Settings *slog.HandlerOptions
 	Logs     Logs
 
@@ -43,7 +45,9 @@ type Variadic func(o *Options)
 func Specification() *Options {
 	return &Options{
 		Service: "",
+		Group:   "",
 		Writer:  os.Stdout,
+		Source:  true,
 		Settings: &slog.HandlerOptions{
 			AddSource:   false,
 			Level:       nil,
