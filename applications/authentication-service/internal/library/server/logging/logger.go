@@ -13,8 +13,8 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"health-service/internal/library/color"
-	"health-service/internal/library/levels"
+	"authentication-service/internal/library/color"
+	"authentication-service/internal/library/levels"
 )
 
 func caller() runtime.Frame {

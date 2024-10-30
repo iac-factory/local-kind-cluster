@@ -60,7 +60,7 @@ region 		= $(shell aws configure get region)
 prepare:
 	@$(information) Executing Module Vendoring
 	@go mod tidy # && go mod vendor
-	@go test ./... --tags local
+	@go test -v ./... --tags local
 	@$(ok) Build Preparation
 
 patch-version-bump: prepare

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"health-service/internal/library/levels"
-	"health-service/internal/library/server/logging"
+	"authentication-service/internal/library/levels"
+	"authentication-service/internal/library/server/logging"
 )
 
 func Test(t *testing.T) {
