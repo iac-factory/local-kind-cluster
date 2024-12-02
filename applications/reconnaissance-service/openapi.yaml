@@ -1,0 +1,120 @@
+openapi: 3.0.3
+info:
+    title: reconnaissance-service
+    description: |
+        # Reconnaissance Service
+        ```
+    version: 1.0.0
+
+servers:
+    -   url: http://localhost:8080
+    -   url: http://localhost:8080/v1/reconnaissance-service
+
+paths:
+    /:
+        get:
+            summary: Service metadata
+            responses:
+                200:
+                    $ref: "#/components/responses/metadata"
+    /tls/expiration:
+        post:
+            summary: TLS Certificate Expiration Information
+            requestBody:
+                $ref: "#/components/requestBodies/tls-expiration"
+            responses:
+                200:
+                    $ref: "#/components/responses/tls-expiration-success"
+
+components:
+    requestBodies:
+        tls-expiration:
+            description: TLS Expiration Payload
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            hostname:
+                                type: string
+                            port:
+                                type: integer
+                        required:
+                            - hostname
+                            - port
+                    example:
+                        hostname: "google.com"
+                        port: 443
+
+    responses:
+        tls-expiration-success:
+            description: A successful TLS Expiration response.
+            content:
+                application/json:
+                    schema:
+                        type: object
+        health:
+            description: A health check response used by internal probes.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            status:
+                                type: string
+                                example: ok
+        metadata:
+            description: An endpoint response used as entry points by microservices.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        additionalProperties:
+                            type: string
+                            example: example-service
+                            properties:
+                                path:
+                                    type: string
+                                    example: /
+                                service:
+                                    type: string
+                                    example: example-service
+                                version:
+                                    type: string
+                                    example: 1.0.0
+                                    default: development
+                    example:
+                        example-service:
+                            path: /
+                            service: example-service
+                            version: 1.0.0
+
+    securitySchemes:
+        Basic:
+            type: http
+            scheme: basic
+        Bearer:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+        Cookie:
+            type: apiKey
+            in: cookie
+            name: token
+        API:
+            type: apiKey
+            in: header
+            name: X-API-Key
+        OpenID:
+            type: openIdConnect
+            openIdConnectUrl: https://example.com/.well-known/openid-configuration
+        OAuth2:
+            type: oauth2
+            flows:
+                authorizationCode:
+                    authorizationUrl: https://example.com/oauth/authorize
+                    tokenUrl: https://example.com/oauth/token
+                    scopes:
+                        read: Grants read access
+                        write: Grants write access
+                        admin: Grants access to admin operations

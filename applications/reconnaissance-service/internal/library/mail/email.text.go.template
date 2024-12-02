@@ -1,0 +1,18 @@
+{{- /*gotype: http-api/internal/providers/aws/email.Metadata */ -}}
+
+Welcome to ETHR.GG!
+
+To continue setting up your ETHR account, please verify this is your
+email address by navigating to the link below:
+
+{{ $.URL }}
+
+The verification link will expire in {{ $.Expiration }} {{ $.Duration }}.
+
+If you did not make this request, disregard this email.
+
+Thank you for joining ETHR. We're excited to have you on board!
+
+- ETHR Development Team
+
+{{- printf "%s" "\n" -}}
