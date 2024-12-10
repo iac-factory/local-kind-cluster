@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: user-service
+spec:
+    template:
+        spec:
+            containers:
+                -   name: user-service
+                    env:
+                        -   name: PGDATABASE
+                            value: user-service
+                        -   name: PGPORT
+                            valueFrom:
+                                secretKeyRef:
+                                    optional: false
+                                    name: postgres-cluster-superuser
+                                    key: port
+                        -   name: PGHOST
+                            valueFrom:
+                                secretKeyRef:
+                                    optional: false
+                                    name: postgres-cluster-superuser
+                                    key: host
+                        -   name: PGUSER
+                            valueFrom:
+                                secretKeyRef:
+                                    optional: false
+                                    name: postgres-cluster-superuser
+                                    key: username
+                        -   name: PGPASSWORD
+                            valueFrom:
+                                secretKeyRef:
+                                    optional: false
+                                    name: postgres-cluster-superuser
+                                    key: password

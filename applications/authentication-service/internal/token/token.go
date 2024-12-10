@@ -18,8 +18,11 @@ var signer []byte
 func init() {
 	value := os.Getenv("JWT_SIGNING_TOKEN")
 	if value == "" {
+		slog.Warn("No JWT_SIGNING_TOKEN Environment Variable Set... Defaulting to Development Token")
+
 		value = "cnZ7Pc-xg20iP2qecFYj2bEt1O1qBDCfOmkdz5i6Fxw"
 	}
+
 	if len(value) == 0 {
 		log.Fatal("invalid jwt signing token")
 	}

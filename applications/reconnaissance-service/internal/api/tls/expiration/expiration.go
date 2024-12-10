@@ -53,7 +53,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	// Check if hostname exists
 
 	// Attempt to resolve the hostname to an IP address
-	_, e := net.LookupIP(input.Hostname)
+	ips, e := net.LookupIP(input.Hostname)
 	if e != nil {
 		labeler.Add(attribute.Bool("warning", true))
 		slog.WarnContext(ctx, "Hostname Doesn't Exist or Cannot be Resolved", slog.String("error", e.Error()))
@@ -104,7 +104,14 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"address": address,
+		"address":  address,
+		"hostname": input.Hostname,
+		"port":     input.Port,
+		"connection-remote-address": map[string]interface{}{
+			"network": connection.RemoteAddr().Network(),
+			"address": connection.RemoteAddr().String(),
+		},
+		"ip-addresses": ips,
 		"expiration": map[string]interface{}{
 			"string": expiration.String(),
 			"utc":    expiration.UTC().String(),

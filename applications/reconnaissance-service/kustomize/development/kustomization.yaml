@@ -11,6 +11,6 @@ patches:
 images:
     - name: service:latest
       newName: localhost:5050/reconnaissance-service
-      newTag: 0.2.38
+      newTag: 0.0.24
 resources:
     - ../base

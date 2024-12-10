@@ -54,7 +54,6 @@ spec:
                             valueFrom:
                                 fieldRef:
                                     fieldPath: metadata.labels['service']
-
                         -   name: LOCAL_POD_SERVICE_ACCOUNT
                             valueFrom:
                                 fieldRef:

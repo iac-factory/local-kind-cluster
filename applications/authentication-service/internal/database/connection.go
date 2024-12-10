@@ -32,14 +32,14 @@ func dsn(ctx context.Context) (v string) {
 
 	if uri.Host == "" {
 		const value = "localhost"
-		slog.Log(ctx, levels.Info, "Host Environment Variable Not Found - Using Default", slog.String("environment-variable", "PGHOST"), slog.String("value", value))
+		slog.Log(ctx, levels.Warning, "Host Environment Variable Not Found - Using Default", slog.String("environment-variable", "PGHOST"), slog.String("value", value))
 		uri.Host = value
 	}
 
 	timeout := os.Getenv("PGCONNECT_TIMEOUT")
 	if timeout == "" {
 		const value = "10"
-		slog.Log(ctx, levels.Info, "Timeout Environment Variable Not Found - Using Default", slog.String("environment-variable", "PGCONNECT_TIMEOUT"), slog.String("value", value))
+		slog.Log(ctx, levels.Warning, "Timeout Environment Variable Not Found - Using Default", slog.String("environment-variable", "PGCONNECT_TIMEOUT"), slog.String("value", value))
 		timeout = value
 	}
 
@@ -140,7 +140,7 @@ func Disconnect(ctx context.Context, connection *pgxpool.Conn, tx pgx.Tx) {
 		} else if e != nil && (errors.Is(e, pgx.ErrTxClosed)) {
 			slog.DebugContext(ctx, "Successfully Committed Database Transaction")
 		} else if e == nil {
-			slog.InfoContext(ctx, "Successfully Rolled Back Database Transaction")
+			slog.WarnContext(ctx, "Successfully Rolled Back Database Transaction")
 		}
 	}
 

@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"github.com/aws/smithy-go"
 
-	"verification-service/internal/configuration"
+	"authentication-service/internal/library/mail/internal/configuration"
 )
 
 func Verification(ctx context.Context, recipient string, code string) error {

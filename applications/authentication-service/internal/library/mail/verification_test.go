@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"verification-service/internal/random"
+	"authentication-service/internal/library/random"
 )
 
 func TestVerification(t *testing.T) {

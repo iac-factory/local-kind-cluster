@@ -6,13 +6,16 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log/slog"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
 	"time"
 
+	"authentication-service/internal/library/middleware/telemetrics"
 	"authentication-service/internal/library/server"
 	"authentication-service/internal/library/server/logging"
 	"authentication-service/internal/library/server/telemetry"
@@ -98,6 +101,59 @@ func main() {
 				"api":         instance.Version().Value(ctx).API,
 				"version":     instance.Version().Value(ctx).Service,
 			},
+		}
+
+		headers := telemetrics.New().Value(ctx).Headers
+
+		{
+			// user-service
+
+			c := telemetry.Client(headers)
+
+			namespace := os.Getenv("NAMESPACE")
+			if namespace == "" {
+				namespace = "development"
+			}
+
+			url := fmt.Sprintf("http://user-service.%s.svc.cluster.local:8080", namespace)
+
+			request, e := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+			if e != nil {
+				slog.ErrorContext(ctx, "Unable to Generate Request", slog.String("error", e.Error()))
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			svc, e := c.Do(request)
+			if e != nil {
+				slog.ErrorContext(ctx, "Unable to Send Request", slog.String("error", e.Error()))
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+
+			defer svc.Body.Close()
+
+			content, e := io.ReadAll(svc.Body)
+			if e != nil {
+				slog.ErrorContext(ctx, "Unable to Read Raw Response", slog.String("error", e.Error()))
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+			// --> only successful responses will be in json format
+
+			switch svc.StatusCode {
+			case http.StatusOK:
+				var mapping map[string]interface{}
+				if e := json.Unmarshal(content, &mapping); e != nil {
+					slog.ErrorContext(ctx, "Unable to Unmarshal Response", slog.String("error", e.Error()))
+					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+					return
+				}
+
+				maps.Copy(response[service].(map[string]interface{}), mapping)
+			default: // note an error response is not returned
+				slog.ErrorContext(ctx, "Service Returned an Error", slog.String("url", url), slog.Int("status", svc.StatusCode), slog.String("response", string(content)))
+			}
 		}
 
 		w.Header().Set("Content-Type", "application/json")

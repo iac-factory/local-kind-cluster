@@ -157,6 +157,8 @@ components:
                                     type: string
                                     example: 1.0.0
                                     default: development
+                            additionalProperties:
+                                type: object
                     example:
                         example-service:
                             path: /
@@ -165,13 +167,16 @@ components:
 
     securitySchemes:
         Basic:
+            description: Basic Username + Password Authentication
             type: http
             scheme: basic
         Bearer:
+            description: Bearer token using a JWT
             type: http
             scheme: bearer
             bearerFormat: JWT
         Cookie:
+            description: Cookie token using a JWT
             type: apiKey
             in: cookie
             name: token

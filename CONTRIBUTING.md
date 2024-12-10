@@ -47,7 +47,6 @@
     kubectl port-forward --namespace development services/postgres-cluster-rw 5432:5432
     ```
 
-
 1. Apply the manifests.
 
     ```bash

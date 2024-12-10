@@ -25,6 +25,14 @@ paths:
             responses:
                 200:
                     $ref: "#/components/responses/tls-expiration-success"
+    /tls/x509:
+        post:
+            summary: TLS Certificate Expiration Information
+            requestBody:
+                $ref: "#/components/requestBodies/tls-x509"
+            responses:
+                200:
+                    $ref: "#/components/responses/tls-x509-success"
 
 components:
     requestBodies:
@@ -45,14 +53,101 @@ components:
                     example:
                         hostname: "google.com"
                         port: 443
+        tls-x509:
+            description: TLS x509 Payload
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            hostname:
+                                type: string
+                            port:
+                                type: integer
+                        required:
+                            - hostname
+                            - port
+                    example:
+                        hostname: "google.com"
+                        port: 443
 
     responses:
+        tls-x509-success:
+            description: A successful TLS x509 response.
+            content:
+                application/json:
+                    schema:
+                        type: object
         tls-expiration-success:
             description: A successful TLS Expiration response.
             content:
                 application/json:
                     schema:
                         type: object
+                        properties:
+                            address:
+                                type: string
+                            connection-remote-address:
+                                type: object
+                                properties:
+                                    address:
+                                        type: string
+                                    network:
+                                        type: string
+                                        enum:
+                                            - "tcp"
+                                            - "udp"
+                            ip-addresses:
+                                type: array
+                                items:
+                                    type: string
+                            hostname:
+                                type: string
+                            port:
+                                type: integer
+                            expiration:
+                                type: object
+                                properties:
+                                    string:
+                                        type: string
+                                    unix:
+                                        type: integer
+                                    utc:
+                                        type: string
+                            time-remaining:
+                                type: object
+                                properties:
+                                    hours:
+                                        type: float
+                                    milliseconds:
+                                        type: float
+                                    nanoseconds:
+                                        type: float
+                                    seconds:
+                                        type: float
+                                    string:
+                                        type: string
+                    example:
+                        address: google.com:443
+                        connection-remote-address:
+                            address: 142.250.72.46:443
+                            network: tcp
+                        expiration:
+                            string: 2025-01-27 08:37:46 +0000 UTC
+                            unix: 1737967066
+                            utc: 2025-01-27 08:37:46 +0000 UTC
+                        hostname: google.com
+                        ip-addresses:
+                            - 142.250.72.46
+                            - 2607:f8b0:400f:804::200e
+                        port: 443
+                        time-remaining:
+                            hours: 1155.5172723446292
+                            milliseconds: 4159862180
+                            nanoseconds: 4159862180440665
+                            seconds: 4159862.180440665
+                            string: 1155h31m2.180440665s
+
         health:
             description: A health check response used by internal probes.
             content:
@@ -83,6 +178,8 @@ components:
                                     type: string
                                     example: 1.0.0
                                     default: development
+                            additionalProperties:
+                                type: object
                     example:
                         example-service:
                             path: /
@@ -91,13 +188,16 @@ components:
 
     securitySchemes:
         Basic:
+            description: Basic Username + Password Authentication
             type: http
             scheme: basic
         Bearer:
+            description: Bearer token using a JWT
             type: http
             scheme: bearer
             bearerFormat: JWT
         Cookie:
+            description: Cookie token using a JWT
             type: apiKey
             in: cookie
             name: token

@@ -6,6 +6,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"reconnaissance-service/internal/api/tls/expiration"
+	"reconnaissance-service/internal/api/tls/x509"
 )
 
 func Router(parent *http.ServeMux) {
@@ -29,4 +30,6 @@ func Router(parent *http.ServeMux) {
 	// authentication(parent)
 
 	parent.Handle("POST /tls/expiration", otelhttp.WithRouteTag("/tls/expiration", expiration.Handler))
+
+	parent.Handle("POST /tls/x509", otelhttp.WithRouteTag("/tls/x509", x509.Handler))
 }

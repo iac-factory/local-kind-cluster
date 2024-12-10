@@ -28,6 +28,16 @@ import (
 	"authentication-service/models/users"
 )
 
+type exception struct {
+	code    int
+	status  string
+	message string
+}
+
+func (e *exception) Error() string {
+	return fmt.Sprintf("%s: %s", e.status, e.message)
+}
+
 func handle(w http.ResponseWriter, r *http.Request) {
 	const name = "registration"
 
@@ -100,7 +110,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	user := &users.CreateParams{Email: input.Email}
 
 	// --> check if user exists
-
 	count, e := users.New().Count(ctx, tx, user.Email)
 	if e != nil {
 		slog.ErrorContext(ctx, "Unable to Check User Count", slog.String("error", e.Error()))
@@ -144,7 +153,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// register the user with user-service
-
 	var events = func() error { // --> only internal server errors relative to the current service will return an error
 		headers := telemetrics.New().Value(ctx).Headers
 		maps.Copy(headers, map[string]string{
@@ -202,14 +210,32 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 
-		slog.InfoContext(ctx, "User-Service Response", slog.String("content", string(content)), slog.Int("status", response.StatusCode))
+		// rollback conditions
+		switch response.StatusCode {
+		case http.StatusInternalServerError:
+			slog.WarnContext(ctx, "User-Service Registration Endpoint Fatal Error", slog.String("content", string(content)), slog.String("status", response.Status), slog.Int("status-code", response.StatusCode))
+
+			return &exception{code: response.StatusCode, status: response.Status, message: "Internal Server Error"}
+		}
+
+		slog.InfoContext(ctx, "User-Service Registration Response", slog.String("content", string(content)), slog.String("status", response.Status), slog.Int("status-code", response.StatusCode))
 
 		return nil
 	}
 
 	if e := events(); e != nil {
 		labeler.Add(attribute.Bool("error", true))
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+		switch e.(type) {
+		case *exception:
+			instance := e.(*exception)
+
+			http.Error(w, instance.status, instance.code)
+
+		default:
+			http.Error(w, "Unhandled Exception", http.StatusInternalServerError)
+		}
+
 		return
 	}
 

@@ -21,8 +21,8 @@ COPY . ./
 
 ENV GOCACHE=/root/.cache/go-build
 
-# RUN --mount=type=cache,target="/root/.cache/go-build" go build --mod vendor --ldflags="-s -w -X 'main.sname=ETHR' -X 'main.version=$(head VERSION)' -X 'main.service=${SERVICE}'" -o /service
-RUN --mount=type=cache,target="/root/.cache/go-build" go build --ldflags="-s -w -X 'main.sname=ETHR' -X 'main.version=$(head VERSION)' -X 'main.service=${SERVICE}'" -o /service
+# RUN --mount=type=cache,target="/root/.cache/go-build" go build --mod vendor --ldflags="-s -w -X 'main.sname=POLYGUN' -X 'main.version=$(head VERSION)' -X 'main.service=${SERVICE}'" -o /service
+RUN --mount=type=cache,target="/root/.cache/go-build" go build --ldflags="-s -w -X 'main.sname=POLYGUN' -X 'main.version=$(head VERSION)' -X 'main.service=${SERVICE}'" -o /service
 
 # --> Prevents shell access
 RUN adduser -h "/dev/null" -g "" -s "/sbin/nologin" -D -H -u 10000 api-service-user
