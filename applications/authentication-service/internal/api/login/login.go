@@ -21,14 +21,15 @@ import (
 	"authentication-service/models/users"
 )
 
-func handle(w http.ResponseWriter, r *http.Request) {
+// Handler is an HTTP handler that processes login requests, validates user credentials, and generates a JWT token for authenticated sessions.
+var Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	const name = "login"
 
 	ctx := r.Context()
 
-	labeler, _ := otelhttp.LabelerFromContext(ctx)
 	service := middleware.New().Service().Value(ctx)
 	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer(service).Start(ctx, name)
+	labeler, _ := otelhttp.LabelerFromContext(ctx)
 
 	defer span.End()
 
@@ -104,8 +105,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// --> attempt to get customer id
-
 	jwtstring, e := token.Create(ctx, user.Email)
 	if e != nil {
 		const message = "Unable to Generate JWT Token"
@@ -122,12 +121,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(jwtstring))
-
-	return
-}
-
-var Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	handle(w, r)
 
 	return
 })

@@ -1,9 +1,9 @@
-{{- /*gotype: http-api/internal/providers/aws/email.Metadata */ -}}
+{{- /*gotype: verification-service/internal/library/mail.Metadata */ -}}
 
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>ETHR - User Email Verification</title>
+        <title>Polygun - User Email Verification</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -73,11 +73,11 @@
             </h1>
             <br/>
             <p>
-                Welcome to ETHR.GG!
+                Welcome to Polygun!
             </p>
             <br/>
             <p>
-                To continue setting up your ETHR account, please verify this is your
+                To continue setting up your Polygun account, please verify this is your
                 email address.
             </p>
             <br/>

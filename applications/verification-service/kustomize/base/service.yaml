@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: verification-service # verification-service.<namespace>.svc.cluster.local
+    labels:
+        app: verification-service
+        service: verification-service
+spec:
+    selector:
+        app: verification-service
+    ports:
+        -   port: 8080
+            targetPort: 8080
+            name: http

@@ -19,6 +19,6 @@ type Variadic types.Variadic[Settings]
 
 func settings() *Settings {
 	return &Settings{
-		Level: (slog.LevelDebug - 4),
+		Level: slog.LevelDebug,
 	}
 }

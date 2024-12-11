@@ -7,8 +7,6 @@ package users
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const all = `-- name: All :one
@@ -49,8 +47,18 @@ func (q *Queries) Attributes(ctx context.Context, db DBTX, id int64) (User, erro
 	return i, err
 }
 
+const clean = `-- name: Clean :exec
+DELETE FROM "User" WHERE (email) = $1
+`
+
+// Clean performs a hard delete on the [User] database record, regardless if a soft delete has been performed, and only by email. This function should only be used in test(s).
+func (q *Queries) Clean(ctx context.Context, db DBTX, email string) error {
+	_, err := db.Exec(ctx, clean, email)
+	return err
+}
+
 const count = `-- name: Count :one
-SELECT count(*) FROM "User" WHERE (email) = $1::text AND (deletion) IS NULL
+SELECT count(*) FROM "User" WHERE (email) = $1 AND (deletion) IS NULL
 `
 
 // Count returns 0 or 1 depending on if a [User] record matching the provided email exists.
@@ -83,24 +91,109 @@ func (q *Queries) Create(ctx context.Context, db DBTX, email string) (User, erro
 	return i, err
 }
 
-const delete = `-- name: Delete :exec
-DELETE FROM "User" WHERE id = $1
+const deleteHard = `-- name: DeleteHard :exec
+DELETE FROM "User" WHERE (id) = $1
 `
 
-// Delete performs a hard database delete on a [User] record.
-func (q *Queries) Delete(ctx context.Context, db DBTX, id int64) error {
-	_, err := db.Exec(ctx, delete, id)
+// DeleteHard performs a hard delete on the [User] database record, regardless if a soft delete has been performed.
+func (q *Queries) DeleteHard(ctx context.Context, db DBTX, id int64) error {
+	_, err := db.Exec(ctx, deleteHard, id)
 	return err
 }
 
-const deleteByEmail = `-- name: DeleteByEmail :exec
-DELETE FROM "User" WHERE email = $1
+const deleteSoft = `-- name: DeleteSoft :exec
+UPDATE "User" SET (modification, deletion) = (now(), now()) WHERE (id) = ($1) AND (deletion) IS NULL
 `
 
-// DeleteByEmail performs a hard database delete on a [User] record.
-func (q *Queries) DeleteByEmail(ctx context.Context, db DBTX, email string) error {
-	_, err := db.Exec(ctx, deleteByEmail, email)
+// DeleteSoft performs a soft delete on the [User] database record if the record hasn't already been deleted.
+func (q *Queries) DeleteSoft(ctx context.Context, db DBTX, id int64) error {
+	_, err := db.Exec(ctx, deleteSoft, id)
 	return err
+}
+
+const exists = `-- name: Exists :one
+SELECT EXISTS (SELECT 1 FROM "User" WHERE (id) = $1 AND (deletion) IS NULL)
+`
+
+// Exists checks if a [User] record exists, searching for the entry via the [User.ID] property.
+func (q *Queries) Exists(ctx context.Context, db DBTX, id int64) (bool, error) {
+	row := db.QueryRow(ctx, exists, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const existsForce = `-- name: ExistsForce :one
+SELECT EXISTS (SELECT 1 FROM "User" WHERE (id) = $1)
+`
+
+// Exists checks if a [User] record exists, searching for the entry via the [User.ID] property, regardless if a user has been soft deleted.
+func (q *Queries) ExistsForce(ctx context.Context, db DBTX, id int64) (bool, error) {
+	row := db.QueryRow(ctx, existsForce, id)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
+const extract = `-- name: Extract :one
+SELECT id, name, "display-name", email, avatar, marketing, creation, modification, deletion FROM "User" WHERE (id, email) = ($1, $2)
+`
+
+type ExtractParams struct {
+	ID    int64 `db:"id" json:"id"`
+	Email int64 `db:"email" json:"email"`
+}
+
+// Extract retrieves a given [User] database record, regardless of its deletion status.
+func (q *Queries) Extract(ctx context.Context, db DBTX, arg *ExtractParams) (User, error) {
+	row := db.QueryRow(ctx, extract, arg.ID, arg.Email)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.DisplayName,
+		&i.Email,
+		&i.Avatar,
+		&i.Marketing,
+		&i.Creation,
+		&i.Modification,
+		&i.Deletion,
+	)
+	return i, err
+}
+
+const getUserEmailAddressByID = `-- name: GetUserEmailAddressByID :one
+SELECT "id", "email" FROM "User" WHERE id = $1 AND (deletion) IS NULL
+`
+
+type GetUserEmailAddressByIDRow struct {
+	ID    int64  `db:"id" json:"id"`
+	Email string `db:"email" json:"email"`
+}
+
+// GetUserEmailAddressByID will return a [User] with the record's [User.Email] and [User.ID] hydrated when searching by a [User] identifier.
+func (q *Queries) GetUserEmailAddressByID(ctx context.Context, db DBTX, id int64) (GetUserEmailAddressByIDRow, error) {
+	row := db.QueryRow(ctx, getUserEmailAddressByID, id)
+	var i GetUserEmailAddressByIDRow
+	err := row.Scan(&i.ID, &i.Email)
+	return i, err
+}
+
+const getUserEmailAddressByIDForce = `-- name: GetUserEmailAddressByIDForce :one
+SELECT "id", "email" FROM "User" WHERE id = $1
+`
+
+type GetUserEmailAddressByIDForceRow struct {
+	ID    int64  `db:"id" json:"id"`
+	Email string `db:"email" json:"email"`
+}
+
+// GetUserEmailAddressByIDForce will return a [User] with the record's [User.Email] and [User.ID] hydrated when searching by a [User] identifier -- regardless of soft delete.
+func (q *Queries) GetUserEmailAddressByIDForce(ctx context.Context, db DBTX, id int64) (GetUserEmailAddressByIDForceRow, error) {
+	row := db.QueryRow(ctx, getUserEmailAddressByIDForce, id)
+	var i GetUserEmailAddressByIDForceRow
+	err := row.Scan(&i.ID, &i.Email)
+	return i, err
 }
 
 const list = `-- name: List :many
@@ -173,18 +266,17 @@ func (q *Queries) Total(ctx context.Context, db DBTX) (int64, error) {
 }
 
 const updateUserAvatar = `-- name: UpdateUserAvatar :exec
-UPDATE "User" SET avatar = $2, modification = $3 WHERE (email) = $1 AND (deletion) IS NULL
+UPDATE "User" SET avatar = $1::text, modification = now() WHERE (id) = $2 AND (deletion) IS NULL
 `
 
 type UpdateUserAvatarParams struct {
-	Email        string             `db:"email" json:"email"`
-	Avatar       *string            `db:"avatar" json:"avatar"`
-	Modification pgtype.Timestamptz `db:"modification" json:"modification"`
+	Avatar string `db:"avatar" json:"avatar"`
+	ID     int64  `db:"id" json:"id"`
 }
 
 // UpdateUserAvatar will update a provided [User] with their specified avatar.
 func (q *Queries) UpdateUserAvatar(ctx context.Context, db DBTX, arg *UpdateUserAvatarParams) error {
-	_, err := db.Exec(ctx, updateUserAvatar, arg.Email, arg.Avatar, arg.Modification)
+	_, err := db.Exec(ctx, updateUserAvatar, arg.Avatar, arg.ID)
 	return err
 }
 

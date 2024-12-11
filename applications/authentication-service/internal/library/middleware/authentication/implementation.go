@@ -118,41 +118,11 @@ func (g *generic) Middleware(next http.Handler) http.Handler {
 
 		slog.Log(ctx, g.options.Level.Level(), "JWT Token Structure", slog.Any("header(s)", jwttoken.Header), slog.Any("claim(s)", jwttoken.Claims))
 
-		{ // --> email
-			value := jwttoken.Claims.(jwt.MapClaims)["sub"].(string)
-
-			authentication.Email = value
-		}
-
-		{ // --> issuer
-			value := jwttoken.Claims.(jwt.MapClaims)["iss"].(string)
-
-			authentication.Issuer = value
-		}
-
-		{ // --> audience
-			value := jwttoken.Claims.(jwt.MapClaims)["aud"].(string)
-
-			authentication.Audience = value
-		}
-
 		{ // --> token
 			value := jwttoken
 
 			authentication.Token = value
 		}
-
-		{ // --> raw
-			value := tokenstring
-
-			authentication.Raw = value
-		}
-
-		// { // --> id
-		// 	if v, valid := jwttoken.Claims.(jwt.MapClaims)["id"]; valid {
-		// 		authentication.ID = v
-		// 	}
-		// }
 
 		ctx = context.WithValue(ctx, key, authentication)
 

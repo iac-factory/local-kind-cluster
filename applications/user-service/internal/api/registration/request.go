@@ -9,8 +9,9 @@ import (
 // Body represents the handler's structured request-body
 type Body struct {
 	server.Helper `json:"-"`
-	Email         string  `json:"email" validate:"required,email"` // Email represents the user's required email address.
-	Avatar        *string `json:"avatar"`
+
+	Email  string  `json:"email" validate:"required,email"` // Email represents the user's required email address.
+	Avatar *string `json:"avatar"`                          // Avatar represents an optional field for a valid HTTP URL pointing to the user's avatar.
 }
 
 func (b *Body) Help() server.Validators {
@@ -32,3 +33,6 @@ func (b *Body) Help() server.Validators {
 
 // v represents the request body's struct validator
 var v = validator.New(validator.WithRequiredStructEnabled())
+
+// --> ensure Body satisfies server.Helper
+var _ server.Helper = (*Body)(nil)

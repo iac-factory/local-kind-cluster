@@ -30,7 +30,7 @@ spec:
                             port: 8080
                             path: /health
                         initialDelaySeconds: 5
-                        periodSeconds: 30
+                        periodSeconds: 5
                     image: service:latest
                     imagePullPolicy: Always
                     ports:

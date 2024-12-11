@@ -1,0 +1,13 @@
+kind: Kustomization
+apiVersion: kustomize.config.k8s.io/v1beta1
+namespace: development
+commonAnnotations:
+    environment: development
+patches:
+    - path: deployment.yaml
+images:
+    - name: service:latest
+      newName: localhost:5050/verification-service
+      newTag: 0.8.16
+resources:
+    - ../base

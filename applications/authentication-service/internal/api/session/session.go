@@ -4,38 +4,44 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"reflect"
+	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"authentication-service/internal/library/middleware"
-
 	"authentication-service/internal/library/middleware/authentication"
 
 	"authentication-service/internal/database"
 	"authentication-service/models/users"
 )
 
-func handle(w http.ResponseWriter, r *http.Request) {
+// Handler processes incoming HTTP requests, retrieves user session data, establishes a database connection, fetches the user record, and returns it in JSON format.
+var Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	const name = "session"
 
 	ctx := r.Context()
 
-	labeler, _ := otelhttp.LabelerFromContext(ctx)
 	service := middleware.New().Service().Value(ctx)
 	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer(service).Start(ctx, name)
+	labeler, _ := otelhttp.LabelerFromContext(ctx)
 
 	defer span.End()
 
-	// --> retrieve authentication context
+	// Retrieve authentication context.
+	claims := authentication.New().Value(ctx).Token.Claims.(jwt.MapClaims)
 
-	authentication := authentication.New().Value(ctx)
+	email, e := claims.GetSubject()
+	if e != nil {
+		slog.ErrorContext(ctx, "Unable to Get JWT Subject", slog.String("error", e.Error()))
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
 
-	email := authentication.Email
-
-	// --> establish database connection
-
+	// Establish database connection.
 	connection, e := database.Connection(ctx)
 	if e != nil {
 		slog.ErrorContext(ctx, "Error Establishing Connection to Database", slog.String("error", e.Error()))
@@ -47,28 +53,45 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	defer connection.Release()
 
-	// --> extract the full user record
-
-	record, e := users.New().Get(ctx, connection, email)
-	if e != nil {
-		slog.ErrorContext(ctx, "Unable to Extract User Database Record", slog.Any("error", e))
-
-		labeler.Add(attribute.Bool("error", true))
-		http.Error(w, "Unable to Extract User Database Record", http.StatusInternalServerError)
-		return
+	// Check if a hard search should be performed.
+	force := strings.ToLower(r.URL.Query().Get("force"))
+	if force == "" {
+		force = "false"
 	}
 
-	slog.InfoContext(ctx, "Successfully Extracted User Record for Session", slog.Any("user", record))
+	if force == "true" {
+		// Extract the full user record.
+		record, e := users.New().GetForce(ctx, connection, email)
+		if e != nil {
+			slog.ErrorContext(ctx, "Unable to Extract User Database Record", slog.String("force", force), slog.Any("error", e), slog.String("error-type", reflect.TypeOf(e).String()))
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(record)
+			labeler.Add(attribute.Bool("error", true))
+			http.Error(w, "Unable to Extract User Database Record", http.StatusInternalServerError)
+			return
+		}
 
-	return
-}
+		slog.InfoContext(ctx, "Successfully Extracted User Record for Session", slog.Any("user", record), slog.String("force", force))
 
-var Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	handle(w, r)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(record)
+	} else {
+		// Extract the full user record.
+		record, e := users.New().Get(ctx, connection, email)
+		if e != nil {
+			slog.ErrorContext(ctx, "Unable to Extract User Database Record", slog.String("force", force), slog.Any("error", e), slog.String("error-type", reflect.TypeOf(e).String()))
+
+			labeler.Add(attribute.Bool("error", true))
+			http.Error(w, "Unable to Extract User Database Record", http.StatusInternalServerError)
+			return
+		}
+
+		slog.InfoContext(ctx, "Successfully Extracted User Record for Session", slog.Any("user", record), slog.String("force", force))
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(record)
+	}
 
 	return
 })

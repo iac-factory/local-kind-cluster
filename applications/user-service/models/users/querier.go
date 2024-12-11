@@ -13,14 +13,26 @@ type Querier interface {
 	All(ctx context.Context, db DBTX) (int64, error)
 	// Attributes will use the user's [User.ID] to hydrate all available [User] attribute(s). Note that the following call is more taxing on the database.
 	Attributes(ctx context.Context, db DBTX, id int64) (User, error)
+	// Clean performs a hard delete on the [User] database record, regardless if a soft delete has been performed, and only by email. This function should only be used in test(s).
+	Clean(ctx context.Context, db DBTX, email string) error
 	// Count returns 0 or 1 depending on if a [User] record matching the provided email exists.
 	Count(ctx context.Context, db DBTX, email string) (int64, error)
 	// Create will create a new [User] record.
 	Create(ctx context.Context, db DBTX, email string) (User, error)
-	// Delete performs a hard database delete on a [User] record.
-	Delete(ctx context.Context, db DBTX, id int64) error
-	// DeleteByEmail performs a hard database delete on a [User] record.
-	DeleteByEmail(ctx context.Context, db DBTX, email string) error
+	// DeleteHard performs a hard delete on the [User] database record, regardless if a soft delete has been performed.
+	DeleteHard(ctx context.Context, db DBTX, id int64) error
+	// DeleteSoft performs a soft delete on the [User] database record if the record hasn't already been deleted.
+	DeleteSoft(ctx context.Context, db DBTX, id int64) error
+	// Exists checks if a [User] record exists, searching for the entry via the [User.ID] property.
+	Exists(ctx context.Context, db DBTX, id int64) (bool, error)
+	// Exists checks if a [User] record exists, searching for the entry via the [User.ID] property, regardless if a user has been soft deleted.
+	ExistsForce(ctx context.Context, db DBTX, id int64) (bool, error)
+	// Extract retrieves a given [User] database record, regardless of its deletion status.
+	Extract(ctx context.Context, db DBTX, arg *ExtractParams) (User, error)
+	// GetUserEmailAddressByID will return a [User] with the record's [User.Email] and [User.ID] hydrated when searching by a [User] identifier.
+	GetUserEmailAddressByID(ctx context.Context, db DBTX, id int64) (GetUserEmailAddressByIDRow, error)
+	// GetUserEmailAddressByIDForce will return a [User] with the record's [User.Email] and [User.ID] hydrated when searching by a [User] identifier -- regardless of soft delete.
+	GetUserEmailAddressByIDForce(ctx context.Context, db DBTX, id int64) (GetUserEmailAddressByIDForceRow, error)
 	// List returns all active User record(s).
 	List(ctx context.Context, db DBTX) ([]User, error)
 	// Me will return a [User] and all associated attribute(s) when provided the User's email address.

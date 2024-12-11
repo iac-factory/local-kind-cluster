@@ -20,9 +20,9 @@ import (
 
 func Verification(ctx context.Context, recipient string, code string) error {
 	const (
-		sender  = "no-reply@ethr.gg"
-		subject = "ETHR - Verify Email Address"
-		set     = "ethr-email-verification-configuration-set"
+		sender  = "no-reply@polygun.com"
+		subject = "Polygun - Verify Email Address"
+		set     = "polygun-email-verification-configuration-set"
 	)
 
 	var html, text bytes.Buffer

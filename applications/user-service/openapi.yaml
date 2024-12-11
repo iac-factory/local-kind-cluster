@@ -1,49 +1,118 @@
 openapi: 3.0.3
 info:
     title: user-service
+    version: 0.0.0
     description: |
-        # Authentication Service
-        
-        ## Usage
-        
-        ###### Local
-        
-        ```bash
-        go run --tags local .
-        ```
-    version: 1.0.0
+        ...
 
 servers:
-    -   url: http://localhost:8080
     -   url: http://localhost:8080/v1/user-service
+        description: "Local K8s Cluster"
+    -   url: http://localhost:8080
+        description: "Local API Instance"
 
 paths:
     /:
         get:
-            summary: Service metadata
+            summary: Service Metadata
+            tags:
+                - Standard
             responses:
                 200:
                     $ref: "#/components/responses/metadata"
     /health:
         get:
-            summary: Health probe endpoint
+            summary: Health-Probe Endpoint
+            tags:
+                - Standard
             responses:
                 200:
                     $ref: "#/components/responses/health"
     /@me:
         get:
-            summary: Get login session user information
+            summary: Authenticated Session Metadata
+            tags:
+                - Service
             responses:
                 200:
-                    description: ...
+                    description: A successfully authenticated user's metadata response.
+            security:
+                -   Bearer: [ ]
+                -   Cookie: [ ]
+    /users/{id}:
+        delete:
+            summary: Delete User
+            tags:
+                - Service
+            parameters:
+                -   in: path
+                    name: id
+                    schema:
+                        type: integer
+                    required: true
+                    description: The User-Service, User database record's primary key. ID can be found by visiting the @me endpoint.
+                -   in: query
+                    name: type
+                    required: false
+                    schema:
+                        type: string
+                        enum:
+                            - soft
+                            - hard
+                        description: soft
+            responses:
+                204:
+                    description: Successful deletion of a user database record.
+            security:
+                -   Bearer: [ ]
+                -   Cookie: [ ]
+    /users/{id}/avatar:
+        patch:
+            summary: Avatar Management
+            tags:
+                - Service
+            parameters:
+                -   in: path
+                    name: id
+                    schema:
+                        type: integer
+                    required: true
+                    description: The User-Service, User database record's primary key. ID can be found by visiting the @me endpoint.
+            requestBody:
+                $ref: "#/components/requestBodies/avatar"
+            responses:
+                204:
+                    description: Successful update of a user's avatar.
             security:
                 -   Bearer: [ ]
                 -   Cookie: [ ]
 
 components:
     requestBodies:
+        example:
+            description: Optional description in *Markdown*.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                    example:
+                        key: value
+        avatar:
+            description: Update a user's avatar.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            avatar:
+                                type: string
+                                format: url
+                        required:
+                            - avatar
+                        example:
+                            avatar: https://example.com/assets/user.png
         registration:
-            description: Optional description in *Markdown*
+            description: Optional description in *Markdown*.
             content:
                 application/json:
                     schema:
@@ -61,7 +130,7 @@ components:
                         email: "segmentational@gmail.com"
                         password: "P@ssw0rd!"
         login:
-            description: Login payload
+            description: The login request payload.
             content:
                 application/json:
                     schema:
@@ -80,6 +149,14 @@ components:
                         password: "P@ssw0rd!"
 
     responses:
+        example:
+            description: Optional description in *Markdown*.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                    example:
+                        key: value
         registration-conflict:
             description: User registration conflict when a user already exists with a given email address.
             content:
@@ -149,16 +226,16 @@ components:
 
     securitySchemes:
         Basic:
-            description: Basic Username + Password Authentication
+            description: Basic username + password authentication.
             type: http
             scheme: basic
         Bearer:
-            description: Bearer token using a JWT
+            description: Bearer token using a JWT.
             type: http
             scheme: bearer
             bearerFormat: JWT
         Cookie:
-            description: Cookie token using a JWT
+            description: Cookie token using a JWT.
             type: apiKey
             in: cookie
             name: token

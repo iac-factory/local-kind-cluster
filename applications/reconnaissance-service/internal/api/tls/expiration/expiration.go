@@ -23,9 +23,9 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	labeler, _ := otelhttp.LabelerFromContext(ctx)
 	service := middleware.New().Service().Value(ctx)
 	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer(service).Start(ctx, name)
+	labeler, _ := otelhttp.LabelerFromContext(ctx)
 
 	defer span.End()
 
@@ -53,7 +53,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	// Check if hostname exists
 
 	// Attempt to resolve the hostname to an IP address
-	nips, e := net.LookupIP(input.Hostname)
+	_, e := net.LookupIP(input.Hostname)
 	if e != nil {
 		labeler.Add(attribute.Bool("warning", true))
 		slog.WarnContext(ctx, "Hostname Doesn't Exist or Cannot be Resolved", slog.String("error", e.Error()))
@@ -92,27 +92,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	nipaddresses := make([]map[string]interface{}, len(nips))
-	for index, entity := range nips {
-		nipaddresses[index] = map[string]interface{}{
-			"ipv4":         entity.To4(),
-			"ipv6":         entity.To16(),
-			"default-mask": entity.DefaultMask().String(),
-			"mask":         entity.Mask,
-			"string":       entity.String(),
-			"metadata": map[string]bool{
-				"global-unicast":            entity.IsGlobalUnicast(),
-				"interface-local-multicast": entity.IsInterfaceLocalMulticast(),
-				"link-local-multicast":      entity.IsLinkLocalMulticast(),
-				"link-local-unicast":        entity.IsLinkLocalUnicast(),
-				"loopback":                  entity.IsLoopback(),
-				"multicast":                 entity.IsMulticast(),
-				"private":                   entity.IsPrivate(),
-				"unspecified":               entity.IsUnspecified(),
-			},
-		}
-	}
-
 	// Get the leaf certificate (the server's certificate)
 	cert := state.PeerCertificates[0]
 
@@ -132,7 +111,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			"network": connection.RemoteAddr().Network(),
 			"address": connection.RemoteAddr().String(),
 		},
-		"connection-ip-addresses": nipaddresses,
 		"expiration": map[string]interface{}{
 			"string": expiration.String(),
 			"utc":    expiration.UTC().String(),

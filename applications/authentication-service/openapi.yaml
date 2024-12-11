@@ -1,46 +1,59 @@
 openapi: 3.0.3
 info:
     title: Authentication-Service
+    version: 0.0.0
     description: |
-        # Authentication Service
-        
-        ## Usage
-        
-        ###### Local
-        
-        ```bash
-        go run --tags local .
-        ```
-    version: 1.0.0
+        ...
 
 servers:
-    -   url: http://localhost:8080
     -   url: http://localhost:8080/v1/authentication-service
+        description: "Local K8s Cluster"
+    -   url: http://localhost:8080
+        description: "Local API Instance"
 
 paths:
     /:
         get:
-            summary: Service metadata
+            summary: Service Metadata
+            tags:
+                - Standard
             responses:
                 200:
                     $ref: "#/components/responses/metadata"
+    /health:
+        get:
+            summary: Health-Probe Endpoint
+            tags:
+                - Standard
+            responses:
+                200:
+                    $ref: "#/components/responses/health"
     /login:
         post:
-            summary: Basic user authentication
+            summary: Basic User Login
+            tags:
+                - Service
             requestBody:
                 $ref: "#/components/requestBodies/login"
             responses:
                 200:
                     $ref: "#/components/responses/login-success"
-    /health:
+    /session:
         get:
-            summary: Health probe endpoint
+            summary: Session Information
+            tags:
+                - Service
             responses:
                 200:
                     $ref: "#/components/responses/health"
+            security:
+                - Bearer: []
+                - Cookie: [] 
     /refresh:
         post:
             summary: Generate a refresh token
+            tags:
+                - Service
             responses:
                 200:
                     description: ...
@@ -49,7 +62,9 @@ paths:
                 -   Cookie: [ ]
     /register:
         post:
-            summary: Register a new user
+            summary: Sign-Up
+            tags:
+                - Service
             requestBody:
                 $ref: "#/components/requestBodies/registration"
             responses:
@@ -57,9 +72,44 @@ paths:
                     $ref: "#/components/responses/registration-success"
                 409:
                     $ref: "#/components/responses/registration-conflict"
+    /users/{id}:
+        delete:
+            summary: Delete User
+            tags:
+                - Service
+            parameters:
+                -   in: path
+                    name: id
+                    schema:
+                        type: integer
+                    required: true
+                    description: The User-Service, User database record's primary key. ID can be found by visiting the session endpoint.
+                -   in: query
+                    name: type
+                    required: false
+                    schema:
+                        type: string
+                        enum:
+                            - soft
+                            - hard
+                        description: soft
+            responses:
+                204:
+                    description: Successful deletion of a user database record.
+            security:
+                -   Bearer: [ ]
+                -   Cookie: [ ]
 
 components:
     requestBodies:
+        example:
+            description: Optional description in *Markdown*
+            content:
+                application/json:
+                    schema:
+                        type: object
+                    example:
+                        key: value
         registration:
             description: Optional description in *Markdown*
             content:
@@ -98,6 +148,14 @@ components:
                         password: "P@ssw0rd!"
 
     responses:
+        example:
+            description: Optional description in *Markdown*
+            content:
+                application/json:
+                    schema:
+                        type: object
+                    example:
+                        key: value
         registration-conflict:
             description: User registration conflict when a user already exists with a given email address.
             content:

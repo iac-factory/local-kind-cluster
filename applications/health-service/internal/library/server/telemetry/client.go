@@ -8,14 +8,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-type ETHR struct {
+type Instance struct {
 	Client *http.Client
 
 	Headers map[string]string
 }
 
-func Client(headers map[string]string) *ETHR {
-	return &ETHR{
+func Client(headers map[string]string) *Instance {
+	return &Instance{
 		Client: &http.Client{
 			Timeout: time.Second * 30,
 		},
@@ -23,13 +23,13 @@ func Client(headers map[string]string) *ETHR {
 	}
 }
 
-func (c *ETHR) Do(r *http.Request) (*http.Response, error) {
+func (c *Instance) Do(r *http.Request) (*http.Response, error) {
 	ctx := r.Context()
-	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("ethr-http-telemetry-client").Start(ctx, r.URL.String())
+	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer("polygun-http-telemetry-client").Start(ctx, r.URL.String())
 
 	defer span.End()
 
-	slog.DebugContext(ctx, "Log Message From ETHR HTTP Client Transport", slog.String("url", r.URL.String()))
+	slog.DebugContext(ctx, "Log Message From Polygun HTTP Client Transport", slog.String("url", r.URL.String()))
 
 	for key, value := range c.Headers {
 		r.Header.Set(key, value)

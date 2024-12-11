@@ -8,6 +8,8 @@ import (
 
 // Body represents the handler's structured request-body
 type Body struct {
+	server.Helper `json:"-"`
+
 	Email    string `json:"email" validate:"required,email"`           // Email represents the user's required email address.
 	Password string `json:"password" validate:"required,min=8,max=72"` // Password represents the user's required password.
 }

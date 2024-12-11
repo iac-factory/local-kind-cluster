@@ -9,11 +9,17 @@ import (
 	"io"
 	"log/slog"
 	"maps"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
+	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel/attribute"
+	"golang.org/x/sync/errgroup"
 
 	"authentication-service/internal/library/middleware/telemetrics"
 	"authentication-service/internal/library/server"
@@ -90,6 +96,8 @@ func main() {
 		ctx := r.Context()
 		ctx, span := middleware.New().Tracer().Value(ctx).Start(ctx, name)
 
+		labeler, _ := otelhttp.LabelerFromContext(ctx)
+
 		defer span.End()
 
 		instance := middleware.New()
@@ -103,58 +111,117 @@ func main() {
 			},
 		}
 
-		headers := telemetrics.New().Value(ctx).Headers
+		// --> channel response structure
+		type channels struct {
+			user chan map[string]interface{}
+		}
 
-		{
-			// user-service
+		// --> telemetry-capable client + header(s)
+		c := telemetry.Client(telemetrics.New().Value(ctx).Headers)
 
-			c := telemetry.Client(headers)
+		// --> add service source header to avoid recursive callback(s)
+		maps.Copy(c.Headers, map[string]string{"X-Service-Source": service})
 
-			namespace := os.Getenv("NAMESPACE")
-			if namespace == "" {
-				namespace = "development"
+		// --> establish an error-group for external response-handling
+		g := new(errgroup.Group)
+
+		// --> external service response(s)
+		var responses = channels{
+			user: make(chan map[string]interface{}, 1),
+		}
+
+		// --> closures for all structure's channel(s)
+		defer close(responses.user)
+
+		g.Go(func() error { // user-service
+			if strings.Contains(strings.ToLower(r.Header.Get("X-Service-Source")), "user") {
+				slog.DebugContext(ctx, "Skipping Recursive User-Service Callback")
+				responses.user <- map[string]interface{}{}
+
+				return nil
 			}
 
-			url := fmt.Sprintf("http://user-service.%s.svc.cluster.local:8080", namespace)
-
-			request, e := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+			u := fmt.Sprintf("%s://%s:%d", "http", "user-service", 8080)
+			request, e := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
 			if e != nil {
-				slog.ErrorContext(ctx, "Unable to Generate Request", slog.String("error", e.Error()))
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
+				logger.WarnContext(ctx, reflect.TypeOf(e).String())
+
+				exception := server.Exception{Code: http.StatusInternalServerError, Internal: &server.Internal{Error: e, Message: "Unable to Generate Request"}}
+				slog.ErrorContext(ctx, exception.Internal.Message, slog.String("error", e.Error()))
+				return &exception
 			}
 
 			svc, e := c.Do(request)
 			if e != nil {
-				slog.ErrorContext(ctx, "Unable to Send Request", slog.String("error", e.Error()))
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
+				var lookup *net.DNSError
+				if errors.As(e, &lookup) && os.Getenv("CI") == "" && lookup.IsNotFound { // local development - no such host
+					slog.WarnContext(ctx, "URL Isn't Available in Local Environment", slog.String("error", lookup.Error()))
+					responses.user <- map[string]interface{}{
+						"user-service": map[string]interface{}{
+							"status": "unavailable",
+						},
+					}
+
+					return nil
+				}
+
+				logger.WarnContext(ctx, reflect.TypeOf(e).String())
+
+				exception := server.Exception{Code: http.StatusInternalServerError, Internal: &server.Internal{Error: e, Message: "Unable to Process HTTP-Response"}}
+				slog.ErrorContext(ctx, exception.Internal.Message, slog.String("error", e.Error()))
+				return &exception
 			}
 
 			defer svc.Body.Close()
 
 			content, e := io.ReadAll(svc.Body)
 			if e != nil {
-				slog.ErrorContext(ctx, "Unable to Read Raw Response", slog.String("error", e.Error()))
+				logger.WarnContext(ctx, reflect.TypeOf(e).String())
+
+				exception := server.Exception{Code: http.StatusInternalServerError, Internal: &server.Internal{Error: e, Message: "Unable to Read Raw Response"}}
+				slog.ErrorContext(ctx, exception.Internal.Message, slog.String("error", e.Error()))
+				return &exception
+			}
+
+			switch svc.StatusCode {
+			case http.StatusOK: // --> only successful responses will be in json format
+				var mapping map[string]interface{}
+				if e := json.Unmarshal(content, &mapping); e != nil {
+					exception := server.Exception{Code: http.StatusInternalServerError, Internal: &server.Internal{Error: e, Message: "Unable to Unmarshal Response"}}
+					slog.ErrorContext(ctx, exception.Internal.Message, slog.String("error", e.Error()))
+					return &exception
+				}
+
+				responses.user <- mapping
+			default: // note an error response is not returned
+				e = fmt.Errorf("unexpected status code: %d, %s", svc.StatusCode, string(content))
+				exception := server.Exception{Code: http.StatusInternalServerError, Internal: &server.Internal{Error: e, Message: "Unexpected HTTP Status Code"}}
+				slog.ErrorContext(ctx, exception.Internal.Message, slog.String("error", e.Error()))
+				return &exception
+			}
+
+			return nil
+		})
+
+		// --> an error is only returned upon a fatal, internal server error
+		if e := g.Wait(); e != nil {
+			var exception *server.Exception
+			if !(errors.As(e, &exception)) {
+				slog.ErrorContext(ctx, "A Fatal, Unexpected Internal Server Error Has Occurred", slog.String("error", e.Error()))
+
+				labeler.Add(attribute.Bool("error", true))
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
-			// --> only successful responses will be in json format
 
-			switch svc.StatusCode {
-			case http.StatusOK:
-				var mapping map[string]interface{}
-				if e := json.Unmarshal(content, &mapping); e != nil {
-					slog.ErrorContext(ctx, "Unable to Unmarshal Response", slog.String("error", e.Error()))
-					http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-					return
-				}
-
-				maps.Copy(response[service].(map[string]interface{}), mapping)
-			default: // note an error response is not returned
-				slog.ErrorContext(ctx, "Service Returned an Error", slog.String("url", url), slog.Int("status", svc.StatusCode), slog.String("response", string(content)))
-			}
+			slog.ErrorContext(ctx, "Server Exception Occurred", slog.String("error", e.Error()), slog.String("status", exception.Status), slog.Int("code", exception.Code), slog.Group("internal", slog.String("message", exception.Internal.Message), slog.Any("error", exception.Internal.Error)))
+			exception.Response(w)
+			return
 		}
+
+		slog.DebugContext(ctx, "Completed External Request(s)")
+
+		maps.Copy(response[service].(map[string]interface{}), <-responses.user)
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -162,21 +229,11 @@ func main() {
 
 		return
 	})))
-	// mux.Handle("POST /login", otelhttp.WithRouteTag("/login", login.Handler))
-	//
-	// mux.Handle("GET /logout", otelhttp.WithRouteTag("/logout", logout.Handler))
-	//
-	// mux.Handle("POST /register", otelhttp.WithRouteTag("/register", registration.Handler))
-	//
-	// mux.Handle("POST /refresh", otelhttp.WithRouteTag("/refresh", authentication.Middleware(refresh.Handler)))
-	//
-	// mux.Handle("POST /", otelhttp.WithRouteTag("/", authentication.Middleware(create.Handler)))
-	// mux.Handle("DELETE /", otelhttp.WithRouteTag("/", authentication.Middleware(deletion.Handler)))
 
 	api.Router(mux)
 
 	// --> Start the HTTP server
-	slog.Info("Starting Server ...", slog.String("local", fmt.Sprintf("http://localhost:%s", *(port))))
+	slog.Info("Starting Server ...", slog.String("port", *(port)))
 
 	handler := writer.Handle(middlewares.Handler(mux))
 	handler = otelhttp.NewHandler(handler, "server", otelhttp.WithServerName(service))

@@ -1,6 +1,6 @@
-{{- /*gotype: http-api/internal/providers/aws/email.Metadata */ -}}
+{{- /*gotype: verification-service/internal/library/mail.Metadata */ -}}
 
-Welcome to ETHR.GG!
+Welcome to Polygun!
 
 To continue setting up your ETHR account, please verify this is your
 email address by navigating to the link below:

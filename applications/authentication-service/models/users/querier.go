@@ -15,13 +15,22 @@ type Querier interface {
 	Count(ctx context.Context, db DBTX, email string) (int64, error)
 	// Create creates a new [User] database record.
 	Create(ctx context.Context, db DBTX, arg *CreateParams) (User, error)
-	// Delete performs a hard delete on the [User] database record, regardless if a soft delete has been performed.
-	Delete(ctx context.Context, db DBTX, arg *DeleteParams) error
+	// DeleteHard performs a hard delete on the [User] database record, regardless if a soft delete has been performed.
+	DeleteHard(ctx context.Context, db DBTX, id int64) error
+	// DeleteSoft performs a soft delete on the [User] database record if the record hasn't already been deleted.
+	DeleteSoft(ctx context.Context, db DBTX, id int64) error
+	// Exists checks if a [User] record exists, searching for the entry via the [User.ID] property.
+	Exists(ctx context.Context, db DBTX, id int64) (bool, error)
+	// Exists checks if a [User] record exists, searching for the entry via the [User.ID] property, regardless if a user has been soft deleted.
+	ExistsForce(ctx context.Context, db DBTX, id int64) (bool, error)
 	// Extract retrieves a given [User] database record, regardless of its deletion status.
 	Extract(ctx context.Context, db DBTX, arg *ExtractParams) (User, error)
 	Get(ctx context.Context, db DBTX, email string) (GetRow, error)
-	// Remove performs a soft delete on the [User] database record.
-	Remove(ctx context.Context, db DBTX, arg *RemoveParams) error
+	GetForce(ctx context.Context, db DBTX, email string) (GetForceRow, error)
+	// GetUserEmailAddressByID will return a [User] with the record's [User.Email] and [User.ID] hydrated when searching by a [User] identifier.
+	GetUserEmailAddressByID(ctx context.Context, db DBTX, id int64) (GetUserEmailAddressByIDRow, error)
+	// GetUserEmailAddressByIDForce will return a [User] with the record's [User.Email] and [User.ID] hydrated when searching by a [User] identifier -- regardless of soft delete.
+	GetUserEmailAddressByIDForce(ctx context.Context, db DBTX, id int64) (GetUserEmailAddressByIDForceRow, error)
 }
 
 var _ Querier = (*Queries)(nil)

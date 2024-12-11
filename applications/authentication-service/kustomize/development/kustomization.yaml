@@ -11,6 +11,6 @@ patches:
 images:
     - name: service:latest
       newName: localhost:5050/authentication-service
-      newTag: 0.2.45
+      newTag: 0.2.67
 resources:
     - ../base

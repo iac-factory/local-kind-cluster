@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -23,15 +24,23 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	labeler, _ := otelhttp.LabelerFromContext(ctx)
 	service := middleware.New().Service().Value(ctx)
 	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer(service).Start(ctx, name)
+	labeler, _ := otelhttp.LabelerFromContext(ctx)
 
 	defer span.End()
 
-	authentication := authentication.New().Value(ctx)
+	// Retrieve authentication context.
+	claims := authentication.New().Value(ctx).Token.Claims.(jwt.MapClaims)
 
-	expiration, e := authentication.Token.Claims.GetExpirationTime()
+	email, e := claims.GetSubject()
+	if e != nil {
+		slog.ErrorContext(ctx, "Unable to Get JWT Subject", slog.String("error", e.Error()))
+		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+		return
+	}
+
+	expiration, e := claims.GetExpirationTime()
 	if e != nil {
 		labeler.Add(attribute.Bool("error", true))
 		span.RecordError(e, trace.WithStackTrace(true))
@@ -54,8 +63,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, message, http.StatusTooManyRequests)
 		return
 	}
-
-	email := authentication.Email
 
 	update, e := token.Create(ctx, email)
 	if e != nil {

@@ -1,0 +1,73 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: verification-service
+    labels:
+        app: verification-service
+        version: v1
+        service: verification-service
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: verification-service
+            version: v1
+            service: verification-service
+    template:
+        metadata:
+            labels:
+                app: verification-service
+                version: v1
+                service: verification-service
+                sidecar.istio.io/inject: "true"
+        spec:
+            serviceAccountName: verification-service
+            containers:
+                -   name: verification-service
+                    livenessProbe:
+                        httpGet:
+                            port: 8080
+                            path: /health
+                        initialDelaySeconds: 5
+                        periodSeconds: 5
+                    image: service:latest
+                    imagePullPolicy: Always
+                    ports:
+                        -   containerPort: 8080
+                    env:
+                        -   name: CI
+                            value: "true"
+                        -   name: NAMESPACE
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.namespace
+                        -   name: ENVIRONMENT
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.labels['environment']
+                        -   name: VERSION
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.labels['version']
+                        -   name: SERVICE
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.labels['service']
+
+                        -   name: LOCAL_POD_SERVICE_ACCOUNT
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: spec.serviceAccountName
+                        -   name: LOCAL_POD_IP
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: status.podIP
+                        -   name: LOCAL_NODE_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: spec.nodeName
+                        -   name: LOCAL_POD_NAME
+                            valueFrom:
+                                fieldRef:
+                                    fieldPath: metadata.name

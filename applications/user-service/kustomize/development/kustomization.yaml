@@ -11,6 +11,6 @@ patches:
 images:
     - name: service:latest
       newName: localhost:5050/user-service
-      newTag: 0.3.35
+      newTag: 0.3.64
 resources:
     - ../base

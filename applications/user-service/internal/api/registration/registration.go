@@ -9,7 +9,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
-	"user-service/internal/api/avatar/types/update"
 	"user-service/internal/database"
 	"user-service/internal/library/middleware"
 	"user-service/models/users"
@@ -22,16 +21,15 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	ctx := r.Context()
 
-	labeler, _ := otelhttp.LabelerFromContext(ctx)
 	service := middleware.New().Service().Value(ctx)
 	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer(service).Start(ctx, name)
+	labeler, _ := otelhttp.LabelerFromContext(ctx)
 
 	defer span.End()
 
 	// --> verify input
-
 	var input Body
-	if validator, e := server.Validate(ctx, update.V, r.Body, &input); e != nil {
+	if validator, e := server.Validate(ctx, v, r.Body, &input); e != nil {
 		slog.WarnContext(ctx, "Unable to Verify Request Body")
 
 		if validator != nil {
@@ -49,7 +47,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	slog.DebugContext(ctx, "Input", slog.Any("request", input))
 
 	// --> establish database connection + transaction
-
 	connection, e := database.Connection(ctx)
 	if e != nil {
 		slog.ErrorContext(ctx, "Error Establishing Connection to Database", slog.String("error", e.Error()))
@@ -71,7 +68,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	defer database.Disconnect(ctx, connection, tx)
 
 	// --> check for user existence
-
 	count, e := users.New().Count(ctx, tx, input.Email)
 	if e != nil {
 		slog.ErrorContext(ctx, "Unable to Check if User Exists", slog.String("error", e.Error()))
@@ -87,6 +83,8 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, message, http.StatusConflict)
 		return
 	}
+
+	slog.DebugContext(ctx, "Creating New User ...")
 
 	// --> create the user
 	result, e := users.New().Create(ctx, tx, input.Email)
@@ -425,7 +423,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	// }
 
 	// --> commit the transaction only after all error cases have been evaluated
-
 	if e := tx.Commit(ctx); e != nil {
 		const message = "Unable to Commit Transaction"
 
@@ -436,7 +433,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slog.DebugContext(ctx, "Successfully Committed Database Transaction")
+	slog.DebugContext(ctx, "Successfully Created User")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

@@ -1,0 +1,94 @@
+{{- /*gotype: verification-service/internal/library/mail.Metadata */ -}}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Polygun - User Email Verification</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500&display=swap" rel="stylesheet">
+        <style>
+            * {
+                font-family: "Open Sans", sans-serif;
+                padding: 0;
+                margin: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                display: flex;
+                justify-content: center;
+                padding: 2rem;
+            }
+
+            h1 {
+                color: #010101;
+            }
+
+            a {
+                color: #12D6DF
+            }
+
+            p {
+                color: #010101;
+                line-height: 1.6rem;
+            }
+
+            div.wrapper {
+                max-width: 600px;
+                width: 100%;
+            }
+
+            img {
+                width: 100px;
+                height: auto;
+                margin-bottom: 1rem;
+            }
+
+            a.verify {
+                padding: 1rem;
+                background: rgba(18, 214, 223, 1);
+                border-top-right-radius: 10px;
+                border-bottom-left-radius: 10px;
+                color: #000000 !important;
+                font-weight: 500;
+                cursor: pointer;
+                user-select: none;
+                text-decoration: none;
+            }
+
+            p.expire {
+                color: #808080;
+                font-size: .8rem;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrapper">
+            <img src="https://polgun.com/assets/logo.png"/>
+            <br/>
+            <br/>
+            <h1>
+                Email Address Verification
+            </h1>
+            <br/>
+            <p>
+                Welcome to Polygun!
+            </p>
+            <br/>
+            <p>
+                To continue setting up your Polygun account, please verify this is your
+                email address.
+            </p>
+            <br/>
+            <br/>
+            <a class="verify" href="{{ $.URL }}">Verify Email Address</a>
+            <br/>
+            <br/>
+            <br/>
+            <p class="expire">
+                The verification link will expire in {{ $.Expiration }} {{ $.Duration }}.
+            </p>
+        </div>
+    </body>
+</html>

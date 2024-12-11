@@ -3,59 +3,45 @@ package registration
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"maps"
 	"net/http"
-	"os"
 	"strings"
-
-	"github.com/golang-jwt/jwt/v5"
-
-	"authentication-service/internal/library/middleware"
-	"authentication-service/internal/library/middleware/telemetrics"
-	"authentication-service/internal/library/server"
-	"authentication-service/internal/library/server/cookies"
-	"authentication-service/internal/library/server/telemetry"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"authentication-service/internal/database"
+	"authentication-service/internal/library/middleware"
+	"authentication-service/internal/library/middleware/telemetrics"
+	"authentication-service/internal/library/server"
+	"authentication-service/internal/library/server/cookies"
+	"authentication-service/internal/library/server/telemetry"
 	"authentication-service/internal/token"
 	"authentication-service/models/users"
 )
 
-type exception struct {
-	code    int
-	status  string
-	message string
-}
-
-func (e *exception) Error() string {
-	return fmt.Sprintf("%s: %s", e.status, e.message)
-}
-
-func handle(w http.ResponseWriter, r *http.Request) {
+var Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 	const name = "registration"
 
 	ctx := r.Context()
 
-	labeler, _ := otelhttp.LabelerFromContext(ctx)
 	service := middleware.New().Service().Value(ctx)
 	ctx, span := trace.SpanFromContext(ctx).TracerProvider().Tracer(service).Start(ctx, name)
+	labeler, _ := otelhttp.LabelerFromContext(ctx)
 
 	defer span.End()
 
-	// --> check if authenticated session already is established
-
+	// Check if authenticated session already is established.
 	cookie, e := r.Cookie("token")
 	if e == nil {
 		jwttoken, e := token.Verify(ctx, cookie.Value)
 		if e == nil && jwttoken.Valid {
-			slog.WarnContext(ctx, "User is Already Authenticated", slog.String("email", jwttoken.Claims.(jwt.MapClaims)["sub"].(string)))
+			slog.WarnContext(ctx, "User is Already Authenticated", slog.String("email", jwttoken.Claims.(token.Claims).Subject))
 
 			labeler.Add(attribute.Bool("error", true))
 			http.Error(w, "Authenticated Session Already Exists for User", http.StatusBadRequest)
@@ -63,8 +49,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// --> verify input
-
+	// Verify request input.
 	var input Body
 	if validator, e := server.Validate(ctx, v, r.Body, &input); e != nil {
 		slog.WarnContext(ctx, "Request Body Validation Failure")
@@ -85,8 +70,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 
 	slog.InfoContext(ctx, "Input", slog.Any("body", input))
 
-	// --> construct database payload & establish connection, transaction
-
+	// Establish database connection.
 	connection, e := database.Connection(ctx)
 	if e != nil {
 		slog.ErrorContext(ctx, "Error Establishing Connection to Database", slog.String("error", e.Error()))
@@ -152,7 +136,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// register the user with user-service
+	// Register the user with user-service
 	var events = func() error { // --> only internal server errors relative to the current service will return an error
 		headers := telemetrics.New().Value(ctx).Headers
 		maps.Copy(headers, map[string]string{
@@ -170,12 +154,7 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			return e
 		}
 
-		namespace := os.Getenv("NAMESPACE")
-		if namespace == "" {
-			namespace = "development"
-		}
-
-		url := fmt.Sprintf("http://user-service.%s.svc.cluster.local:8080/register", namespace)
+		url := fmt.Sprintf("%s://%s:%d/register", "http", "user-service", 8080)
 		if override, ok := ctx.Value("user-service-registration-endpoint").(string); ok {
 			url = override // currently used for overriding the user-service endpoint during unit-testing
 		}
@@ -210,12 +189,14 @@ func handle(w http.ResponseWriter, r *http.Request) {
 			return nil
 		}
 
-		// rollback conditions
+		// Evaluate rollback conditions; rollback conditions need to return an error.
 		switch response.StatusCode {
 		case http.StatusInternalServerError:
 			slog.WarnContext(ctx, "User-Service Registration Endpoint Fatal Error", slog.String("content", string(content)), slog.String("status", response.Status), slog.Int("status-code", response.StatusCode))
 
-			return &exception{code: response.StatusCode, status: response.Status, message: "Internal Server Error"}
+			exception := server.Exception{Code: response.StatusCode, Status: response.Status}
+
+			return &exception
 		}
 
 		slog.InfoContext(ctx, "User-Service Registration Response", slog.String("content", string(content)), slog.String("status", response.Status), slog.Int("status-code", response.StatusCode))
@@ -226,20 +207,21 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	if e := events(); e != nil {
 		labeler.Add(attribute.Bool("error", true))
 
-		switch e.(type) {
-		case *exception:
-			instance := e.(*exception)
-
-			http.Error(w, instance.status, instance.code)
-
-		default:
-			http.Error(w, "Unhandled Exception", http.StatusInternalServerError)
+		var exception *server.Exception
+		if errors.As(e, &exception) {
+			slog.ErrorContext(ctx, "User-Service Registration Event Error", slog.String("error", e.Error()))
+			exception.Response(w)
+			return
 		}
+
+		slog.ErrorContext(ctx, "User-Service Unhandled Event Error", slog.String("error", e.Error()))
+
+		http.Error(w, "Unhandled Exception", http.StatusInternalServerError)
 
 		return
 	}
 
-	// --> commit the transaction only after all error cases have been evaluated
+	// Commit the transaction only after all error cases have been evaluated.
 	if e := tx.Commit(ctx); e != nil {
 		slog.ErrorContext(ctx, "Unable to Commit Database Transaction", slog.String("error", e.Error()))
 
@@ -255,12 +237,6 @@ func handle(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(jwtstring))
-
-	return
-}
-
-var Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	handle(w, r)
 
 	return
 })

@@ -3,12 +3,15 @@ package token
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"log/slog"
 	"os"
+	"slices"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 
 	"authentication-service/internal/library/middleware"
 )
@@ -30,13 +33,36 @@ func init() {
 	signer = []byte(value)
 }
 
+// Claims is a standard [jwt.RegisteredClaims] structure that can be extended with additional, custom claims data.
+type Claims struct {
+	jwt.RegisteredClaims
+}
+
+// Create generates a signed JWT token for the specified email with an 8-hour expiration using HS512 signing and returns it or an error in case of failure.
+//
+//   - @TODO - Implement Means to Verify JTI.
 func Create(ctx context.Context, email string) (string, error) {
-	expiration := time.Now().Add(time.Hour * 3).Unix()
-	token := jwt.NewWithClaims(jwt.SigningMethodHS512, jwt.MapClaims{
-		"iss": middleware.New().Service().Value(ctx),
-		"sub": email,
-		"aud": "client",
-		"exp": expiration,
+	now := time.Now()
+	expiration := now.Add(time.Hour * 8)
+
+	issuer := middleware.New().Service().Value(ctx)
+
+	jti := uuid.NewString()
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, Claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:  issuer,
+			Subject: email,
+			Audience: jwt.ClaimStrings{
+				issuer,
+				"user-service",
+				"verification-service",
+			},
+			ExpiresAt: jwt.NewNumericDate(expiration),
+			NotBefore: nil,
+			IssuedAt:  jwt.NewNumericDate(now),
+			ID:        jti,
+		},
 	})
 
 	jwt, e := token.SignedString(signer)
@@ -68,12 +94,27 @@ func Verify(ctx context.Context, t string) (*jwt.Token, error) {
 
 	switch {
 	case token.Valid:
-		slog.DebugContext(ctx, "Verified Valid Token")
+		slog.DebugContext(ctx, "Basic Token Parsing was Successful - Vetting Additional Claims")
+
+		// Verify the token's target audience(s).
+		audiences, e := token.Claims.GetAudience()
+		if e != nil {
+			slog.ErrorContext(ctx, "Error Parsing Audience Claims", slog.String("error", e.Error()), slog.Any("claims", token.Claims))
+			e = fmt.Errorf("unable to parse audience claims: %w", e)
+			return nil, e
+		}
+
+		service := middleware.New().Service().Value(ctx)
+		if !(slices.Contains(audiences, service)) {
+			slog.WarnContext(ctx, "JWT Claims Don't Contain Applicable Audience - Invalidating", slog.Any("claims", token.Claims))
+			e = jwt.ErrTokenInvalidAudience
+			return nil, e
+		}
+
 		return token, nil
 	case errors.Is(e, jwt.ErrTokenMalformed):
 		slog.WarnContext(ctx, "Unable to Verify Malformed String as JWT Token", slog.String("error", e.Error()))
 	case errors.Is(e, jwt.ErrTokenSignatureInvalid):
-		// Invalid signature
 		slog.WarnContext(ctx, "Invalid JWT Signature", slog.String("error", e.Error()))
 	case errors.Is(e, jwt.ErrTokenExpired):
 		slog.WarnContext(ctx, "Expired JWT Token", slog.String("error", e.Error()))

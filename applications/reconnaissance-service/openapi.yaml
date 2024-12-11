@@ -1,25 +1,42 @@
 openapi: 3.0.3
 info:
     title: reconnaissance-service
+    version: 0.0.0
     description: |
-        # Reconnaissance Service
-        ```
-    version: 1.0.0
+        ...
 
 servers:
-    -   url: http://localhost:8080
     -   url: http://localhost:8080/v1/reconnaissance-service
+        description: "Local K8s Cluster"
+    -   url: http://localhost:8080
+        description: "Local API Instance"
 
 paths:
     /:
         get:
-            summary: Service metadata
+            summary: Service Metadata
+            /health:
+                get:
+                    summary: Health-Probe Endpoint
+                    tags:
+                        - Standard
+                    responses:
+                        200:
+                            $ref: "#/components/responses/health"
             responses:
                 200:
                     $ref: "#/components/responses/metadata"
+    /health:
+        get:
+            summary: Health-Probe Endpoint
+            tags:
+                - Standard
+            responses:
+                200:
+                    $ref: "#/components/responses/health"
     /tls/expiration:
         post:
-            summary: TLS Certificate Expiration Information
+            summary: Certificate Expiration Information
             requestBody:
                 $ref: "#/components/requestBodies/tls-expiration"
             responses:
@@ -27,7 +44,7 @@ paths:
                     $ref: "#/components/responses/tls-expiration-success"
     /tls/x509:
         post:
-            summary: TLS Certificate Expiration Information
+            summary: x509 Information
             requestBody:
                 $ref: "#/components/requestBodies/tls-x509"
             responses:
@@ -36,6 +53,14 @@ paths:
 
 components:
     requestBodies:
+        example:
+            description: Optional description in *Markdown*.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                    example:
+                        key: value
         tls-expiration:
             description: TLS Expiration Payload
             content:
@@ -72,6 +97,14 @@ components:
                         port: 443
 
     responses:
+        example:
+            description: Optional description in *Markdown*.
+            content:
+                application/json:
+                    schema:
+                        type: object
+                    example:
+                        key: value
         tls-x509-success:
             description: A successful TLS x509 response.
             content:

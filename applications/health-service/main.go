@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"flag"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -105,7 +104,7 @@ func main() {
 	})))
 
 	// --> Start the HTTP server
-	slog.Info("Starting Server ...", slog.String("local", fmt.Sprintf("http://localhost:%s", *(port))))
+	slog.Info("Starting Server ...", slog.String("port", *(port)))
 
 	handler := writer.Handle(middlewares.Handler(mux))
 	handler = otelhttp.NewHandler(handler, "server", otelhttp.WithServerName(service))
